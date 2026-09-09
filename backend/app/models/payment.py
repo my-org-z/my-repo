@@ -6,7 +6,7 @@ from enum import Enum
 Base = declarative_base()
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(Enum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
