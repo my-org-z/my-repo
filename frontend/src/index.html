@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HintAI - Apprends avec l'IA</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <h1>HintAI</h1>
+                <p class="subtitle">Apprends progressivement avec l'IA</p>
+            </div>
+            <div class="user-info">
+                <span id="username">Invité</span>
+                <span id="credits" class="credits-badge">20 crédits</span>
+            </div>
+        </header>
+
+        <nav class="nav">
+            <button class="nav-btn active" data-section="help-me">Help Me</button>
+            <button class="nav-btn" data-section="learn-concept">Learn a Concept</button>
+            <button class="nav-btn" data-section="history">Historique</button>
+            <button class="nav-btn" data-section="account">Compte</button>
+        </nav>
+
+        <main class="main-content">
+            <!-- Help Me Section -->
+            <section id="help-me" class="section active">
+                <h2>Help Me</h2>
+                <p class="section-description">Obtenez de l'aide pour résoudre vos exercices</p>
+                
+                <div class="input-methods">
+                    <div class="method-cards">
+                        <button class="method-card" data-method="text">
+                            <div class="method-icon">📝</div>
+                            <span>Saisir du texte</span>
+                        </button>
+                        <button class="method-card" data-method="camera">
+                            <div class="method-icon">📷</div>
+                            <span>Prendre une photo</span>
+                        </button>
+                        <button class="method-card" data-method="upload">
+                            <div class="method-icon">📁</div>
+                            <span>Importer une image/PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="text-input" class="input-panel hidden">
+                    <textarea id="exercise-text" placeholder="Saisissez votre exercice ici..." rows="6"></textarea>
+                    <div class="actions">
+                        <button class="btn btn-secondary" id="cancel-text">Annuler</button>
+                        <button class="btn btn-primary" id="submit-text">Analyser</button>
+                    </div>
+                </div>
+
+                <div id="camera-input" class="input-panel hidden">
+                    <div class="camera-preview-container">
+                        <video id="camera-preview" autoplay playsinline class="camera-preview"></video>
+                        <canvas id="camera-canvas" class="hidden"></canvas>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" id="cancel-camera">Annuler</button>
+                        <button class="btn btn-primary" id="capture-btn">Capturer</button>
+                    </div>
+                    <div id="captured-preview" class="hidden">
+                        <img id="captured-image" class="preview-image">
+                        <div class="actions">
+                            <button class="btn btn-secondary" id="retake-btn">Reprendre</button>
+                            <button class="btn btn-primary" id="analyze-captured">Analyser</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="upload-input" class="input-panel hidden">
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="file-upload" accept="image/*,.pdf">
+                        <div class="upload-instructions">
+                            <div class="upload-icon">📄</div>
+                            <p>Glissez-déposez un fichier ici ou cliquez pour parcourir</p>
+                            <p class="file-types">(Images: JPG, PNG, PDF)</p>
+                        </div>
+                    </div>
+                    <div id="upload-preview" class="hidden">
+                        <div class="preview-container">
+                            <img id="preview-image" class="preview-image">
+                            <div class="preview-info">
+                                <span id="preview-filename"></span>
+                                <span id="preview-size"></span>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-secondary" id="cancel-upload">Annuler</button>
+                            <button class="btn btn-primary" id="analyze-upload">Analyser</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-response" class="response-panel hidden">
+                    <div class="response-header">
+                        <h3>Réponse de l'IA</h3>
+                        <div class="response-actions">
+                            <button class="btn-icon" id="copy-response" title="Copier">📋</button>
+                            <button class="btn-icon" id="save-response" title="Enregistrer">💾</button>
+                        </div>
+                    </div>
+                    <div id="streaming-response" class="response-content"></div>
+                    <div id="loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <span>Chargement...</span>
+                    </div>
+                </div>
+
+                <div id="hint-options" class="hidden">
+                    <h3>Options supplémentaires</h3>
+                    <div class="hint-buttons">
+                        <button class="btn btn-outline" id="get-hint-1">Indice 1 (1 crédit)</button>
+                        <button class="btn btn-outline" id="get-hint-2">Indice 2 (1 crédit)</button>
+                        <button class="btn btn-outline" id="get-hint-3">Indice 3 (1 crédit)</button>
+                        <button class="btn btn-danger" id="get-full-solution">Solution complète (2 crédits)</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Learn a Concept Section -->
+            <section id="learn-concept" class="section hidden">
+                <h2>Learn a Concept</h2>
+                <p class="section-description">Apprenez un nouveau concept avec un parcours pédagogique</p>
+                
+                <div class="concept-form">
+                    <div class="form-group">
+                        <label for="concept-input">Concept à apprendre</label>
+                        <input type="text" id="concept-input" placeholder="Ex: Les équations du second degré">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-explanation">Ce que vous comprenez déjà (optionnel)</label>
+                        <textarea id="user-explanation" placeholder="Décrivez vos connaissances actuelles..." rows="4"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="start-learning">Commencer l'apprentissage</button>
+                </div>
+
+                <div id="learning-session" class="hidden">
+                    <div class="session-header">
+                        <h3>Session: <span id="session-concept"></span></h3>
+                        <button class="btn btn-secondary" id="end-learning">Terminer</button>
+                    </div>
+                    <div id="learning-chat" class="chat-container">
+                        <div id="learning-messages" class="chat-messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="learning-input" placeholder="Répondez ou posez une question...">
+                            <button class="btn btn-primary" id="send-learning">Envoyer</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="history" class="section hidden">
+                <h2>Historique</h2>
+                <p class="section-description">Vos précédentes sessions</p>
+                
+                <div class="filters">
+                    <select id="history-filter">
+                        <option value="all">Tous</option>
+                        <option value="help-me">Help Me</option>
+                        <option value="learn-concept">Learn a Concept</option>
+                    </select>
+                    <button class="btn btn-secondary" id="clear-history">Effacer l'historique</button>
+                </div>
+
+                <div id="history-list" class="history-list"></div>
+            </section>
+
+            <!-- Account Section -->
+            <section id="account" class="section hidden">
+                <h2>Mon Compte</h2>
+                
+                <div class="account-info">
+                    <div class="info-card">
+                        <h3>Informations personnelles</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Nom d'utilisateur</label>
+                                <span id="account-username"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email</label>
+                                <span id="account-email">Non renseigné</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Téléphone</label>
+                                <span id="account-phone">Non renseigné</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Abonnement</label>
+                                <span id="account-subscription">Free</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Crédits</h3>
+                        <div class="credits-info">
+                            <div class="credits-balance">
+                                <span class="balance-amount" id="account-credits">20</span>
+                                <span class="balance-label">crédits</span>
+                            </div>
+                            <div class="credits-actions">
+                                <button class="btn btn-outline" id="watch-ad-btn">
+                                    📺 Regarder une pub (+1 crédit)
+                                </button>
+                                <button class="btn btn-primary" id="buy-credits-btn">
+                                    💰 Acheter des crédits
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Abonnements</h3>
+                        <div class="subscription-plans" id="subscription-plans">
+                            <p>Chargement...</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Historique des paiements</h3>
+                        <div class="payment-history" id="payment-history">
+                            <p>Aucun paiement pour l'instant</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal" id="buy-credits-modal">
+                <div class="modal-header">
+                    <h3>Acheter des crédits</h3>
+                    <button class="modal-close" id="close-buy-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="credit-packs" id="credit-packs">
+                        <p>Chargement...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="subscribe-modal">
+                <div class="modal-header">
+                    <h3>Choisir un abonnement</h3>
+                    <button class="modal-close" id="close-subscribe-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="subscription-modal-plans" id="subscription-modal-plans">
+                        <p>Chargement...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="payment-modal">
+                <div class="modal-header">
+                    <h3>Paiement Mobile Money</h3>
+                    <button class="modal-close" id="close-payment-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="payment-form">
+                        <div class="form-group">
+                            <label>Opérateur</label>
+                            <select id="payment-operator">
+                                <option value="tmoney">TMoney</option>
+                                <option value="momo">Mobile Money (MTN/Airtel)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Numéro de téléphone</label>
+                            <input type="tel" id="payment-phone" placeholder="Ex: +228 90 00 00 00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Montant</label>
+                            <input type="text" id="payment-amount" readonly>
+                        </div>
+                        <div class="payment-info">
+                            <p>Vous allez être redirigé vers la plateforme de paiement.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Payer</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal" id="login-modal">
+                <div class="modal-header">
+                    <h3>Se connecter</h3>
+                    <button class="modal-close" id="close-login-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Identifiant (email, téléphone ou nom d'utilisateur)</label>
+                            <input type="text" id="login-identifier" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mot de passe</label>
+                            <input type="password" id="login-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+                        <p class="text-center">Ou <a href="#" id="show-register">Créer un compte</a></p>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal" id="register-modal">
+                <div class="modal-header">
+                    <h3>Créer un compte</h3>
+                    <button class="modal-close" id="close-register-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label>Nom d'utilisateur</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email (optionnel)</label>
+                            <input type="email" id="register-email">
+                        </div>
+                        <div class="form-group">
+                            <label>Téléphone (optionnel)</label>
+                            <input type="tel" id="register-phone" placeholder="+228 90 00 00 00">
+                        </div>
+                        <div class="form-group">
+                            <label>Mot de passe</label>
+                            <input type="password" id="register-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">S'inscrire</button>
+                        <p class="text-center">Ou <a href="#" id="show-login">Se connecter</a></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <footer class="footer">
+        <p>HintAI - Développé avec ❤️ pour les élèves du Togo | <a href="#">Contact</a></p>
+    </footer>
+
+    <script src="analyser.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
