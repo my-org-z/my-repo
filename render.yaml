@@ -16,6 +16,6 @@ services:
       - key: SECRET_KEY
         value: hintai_secret_2024_production
       - key: DATABASE_URL
-        value: sqlite:///./db/hints.db
+        value: postgresql://hintai_db_user:BZaodgVH83BkW2YYyUn5rKNGu4osV4Yx@dpg-daguisuk1f9s73e0p0ag-a.oregon-postgres.render.com/hintai_db
       - key: ENVIRONMENT
         value: production

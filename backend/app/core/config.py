@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     MISTRAL_MODEL: str = "pixtral-12b"
 
     # Database
-    DATABASE_URL: str = "sqlite:///./db/hints.db"
+    DATABASE_URL: str = "postgresql://hintai_db_user:BZaodgVH83BkW2YYyUn5rKNGu4osV4Yx@dpg-daguisuk1f9s73e0p0ag-a.oregon-postgres.render.com/hintai_db"
 
     # Security
     SECRET_KEY: str = "change_this_in_production"
