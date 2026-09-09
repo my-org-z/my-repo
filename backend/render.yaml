@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: hintai-backend
+    runtime: python
+    pythonVersion: "3.11"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    buildCommand: |
+      pip install --upgrade pip
+      pip install --no-cache-dir -r requirements.txt
+    envVars:
+      - key: MISTRAL_API_KEY
+        value: Ra2h2yPHCy1fysPKO6CJaeMtPwGI0naz
+      - key: MISTRAL_MODEL
+        value: pixtral-12b
+      - key: SECRET_KEY
+        value: hintai_secret_2024_production
+      - key: DATABASE_URL
+        value: sqlite:///./db/hints.db
+      - key: ENVIRONMENT
+        value: production
