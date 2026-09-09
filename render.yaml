@@ -3,9 +3,10 @@ services:
     name: hintai-backend
     runtime: python
     pythonVersion: "3.11"
+    rootDir: backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 10000
     buildCommand: |
-      pip install --upgrade pip
+      pip install --upgrade pip setuptools wheel
       pip install --no-cache-dir -r requirements.txt
     envVars:
       - key: MISTRAL_API_KEY
