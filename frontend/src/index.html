@@ -2,355 +2,543 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HintAI - Apprends avec l'IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2563EB">
+    <title>HintAI - Ton assistant éducatif</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
 </head>
 <body>
-    <div class="app-container">
-        <header class="header">
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <button class="nav-item active" data-section="help-me" title="Aide">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span>Aide</span>
+        </button>
+        <button class="nav-item" data-section="learn" title="Apprendre">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                <circle cx="12" cy="12" r="1"/>
+            </svg>
+            <span>Apprendre</span>
+        </button>
+        <button class="nav-item chat-toggle" title="Chat IA">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Chat</span>
+        </button>
+        <button class="nav-item" data-section="history" title="Historique">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+            </svg>
+            <span>Historique</span>
+        </button>
+        <button class="nav-item" data-section="account" title="Compte">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Compte</span>
+        </button>
+    </nav>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
             <div class="logo">
-                <h1>HintAI</h1>
-                <p class="subtitle">Apprends progressivement avec l'IA</p>
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>HintAI</h1>
+                    <p>Ton assistant éducatif</p>
+                </div>
             </div>
-            <div class="user-info">
-                <span id="username">Invité</span>
-                <span id="credits" class="credits-badge">20 crédits</span>
+            <div class="header-actions">
+                <div class="credits-badge" id="credits-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <span id="credits">20</span>
+                </div>
+                <button class="user-btn" id="user-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </button>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <nav class="nav">
-            <button class="nav-btn active" data-section="help-me">Help Me</button>
-            <button class="nav-btn" data-section="learn-concept">Learn a Concept</button>
-            <button class="nav-btn" data-section="history">Historique</button>
-            <button class="nav-btn" data-section="account">Compte</button>
-        </nav>
-
-        <main class="main-content">
-            <!-- Help Me Section -->
-            <section id="help-me" class="section active">
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Help Me Section -->
+        <section id="help-me" class="section active">
+            <div class="section-header">
                 <h2>Help Me</h2>
-                <p class="section-description">Obtenez de l'aide pour résoudre vos exercices</p>
-                
-                <div class="input-methods">
-                    <div class="method-cards">
-                        <button class="method-card" data-method="text">
-                            <div class="method-icon">📝</div>
-                            <span>Saisir du texte</span>
+                <p>Obtenez de l'aide pour résoudre vos exercices</p>
+            </div>
+            
+            <div class="input-methods">
+                <div class="method-card" data-method="text">
+                    <div class="method-icon text-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <path d="M14 2v6h6M12 18v-6M9 15h6"/>
+                        </svg>
+                    </div>
+                    <span>Texte</span>
+                </div>
+                <div class="method-card" data-method="camera">
+                    <div class="method-icon camera-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </div>
+                    <span>Caméra</span>
+                </div>
+                <div class="method-card" data-method="upload">
+                    <div class="method-icon upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <path d="M17 8l-5-5-5 5M17 8v10"/>
+                            <path d="M7 8v10"/>
+                        </svg>
+                    </div>
+                    <span>Importer</span>
+                </div>
+            </div>
+
+            <div id="text-panel" class="input-panel hidden">
+                <textarea id="exercise-text" placeholder="Saisissez votre exercice ici..." rows="4"></textarea>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="cancel-text">Annuler</button>
+                    <button class="btn btn-primary" id="submit-text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Analyser
+                    </button>
+                </div>
+            </div>
+
+            <div id="camera-panel" class="input-panel hidden">
+                <div class="camera-container">
+                    <video id="camera-preview" autoplay playsinline class="camera-preview"></video>
+                    <canvas id="camera-canvas" class="hidden"></canvas>
+                </div>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="cancel-camera">Annuler</button>
+                    <button class="btn btn-primary" id="capture-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="6"/>
+                            <circle cx="12" cy="12" r="2"/>
+                        </svg>
+                        Capturer
+                    </button>
+                </div>
+            </div>
+
+            <div id="upload-panel" class="input-panel hidden">
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="file-upload" accept="image/*,.pdf">
+                    <div class="upload-content">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <path d="M17 8l-5-5-5 5M17 8v10"/>
+                            <path d="M7 8v10"/>
+                        </svg>
+                        <p>Glissez-déposez un fichier</p>
+                        <p class="file-types">Images, PDF</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="preview-panel" class="input-panel hidden">
+                <div class="preview-container">
+                    <img id="preview-image" class="preview-image">
+                    <div class="preview-info">
+                        <span id="preview-filename"></span>
+                        <span id="preview-size"></span>
+                    </div>
+                </div>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="cancel-upload">Annuler</button>
+                    <button class="btn btn-primary" id="analyze-upload">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Analyser
+                    </button>
+                </div>
+            </div>
+
+            <div id="captured-panel" class="input-panel hidden">
+                <img id="captured-image" class="preview-image">
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="retake-btn">Reprendre</button>
+                    <button class="btn btn-primary" id="analyze-captured">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Analyser
+                    </button>
+                </div>
+            </div>
+
+            <div id="response-panel" class="response-panel hidden">
+                <div class="response-header">
+                    <h3>Réponse de l'IA</h3>
+                    <div class="response-actions">
+                        <button class="btn-icon" id="copy-response" title="Copier">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                            </svg>
                         </button>
-                        <button class="method-card" data-method="camera">
-                            <div class="method-icon">📷</div>
-                            <span>Prendre une photo</span>
-                        </button>
-                        <button class="method-card" data-method="upload">
-                            <div class="method-icon">📁</div>
-                            <span>Importer une image/PDF</span>
-                        </button>
                     </div>
                 </div>
-
-                <div id="text-input" class="input-panel hidden">
-                    <textarea id="exercise-text" placeholder="Saisissez votre exercice ici..." rows="6"></textarea>
-                    <div class="actions">
-                        <button class="btn btn-secondary" id="cancel-text">Annuler</button>
-                        <button class="btn btn-primary" id="submit-text">Analyser</button>
-                    </div>
+                <div id="streaming-response" class="response-content"></div>
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span>L'IA réfléchit...</span>
                 </div>
+            </div>
 
-                <div id="camera-input" class="input-panel hidden">
-                    <div class="camera-preview-container">
-                        <video id="camera-preview" autoplay playsinline class="camera-preview"></video>
-                        <canvas id="camera-canvas" class="hidden"></canvas>
-                    </div>
-                    <div class="actions">
-                        <button class="btn btn-secondary" id="cancel-camera">Annuler</button>
-                        <button class="btn btn-primary" id="capture-btn">Capturer</button>
-                    </div>
-                    <div id="captured-preview" class="hidden">
-                        <img id="captured-image" class="preview-image">
-                        <div class="actions">
-                            <button class="btn btn-secondary" id="retake-btn">Reprendre</button>
-                            <button class="btn btn-primary" id="analyze-captured">Analyser</button>
-                        </div>
-                    </div>
+            <div id="hint-panel" class="hint-panel hidden">
+                <h3>Besoin de plus d'aide ?</h3>
+                <div class="hint-buttons">
+                    <button class="btn btn-outline" id="get-hint-1">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                        Indice 1 (1 crédit)
+                    </button>
+                    <button class="btn btn-outline" id="get-hint-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                        Indice 2 (1 crédit)
+                    </button>
+                    <button class="btn btn-outline" id="get-hint-3">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                        Indice 3 (1 crédit)
+                    </button>
+                    <button class="btn btn-danger" id="get-full-solution">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Solution complète (2 crédits)
+                    </button>
                 </div>
+            </div>
+        </section>
 
-                <div id="upload-input" class="input-panel hidden">
-                    <div class="upload-zone" id="upload-zone">
-                        <input type="file" id="file-upload" accept="image/*,.pdf">
-                        <div class="upload-instructions">
-                            <div class="upload-icon">📄</div>
-                            <p>Glissez-déposez un fichier ici ou cliquez pour parcourir</p>
-                            <p class="file-types">(Images: JPG, PNG, PDF)</p>
-                        </div>
-                    </div>
-                    <div id="upload-preview" class="hidden">
-                        <div class="preview-container">
-                            <img id="preview-image" class="preview-image">
-                            <div class="preview-info">
-                                <span id="preview-filename"></span>
-                                <span id="preview-size"></span>
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn btn-secondary" id="cancel-upload">Annuler</button>
-                            <button class="btn btn-primary" id="analyze-upload">Analyser</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="ai-response" class="response-panel hidden">
-                    <div class="response-header">
-                        <h3>Réponse de l'IA</h3>
-                        <div class="response-actions">
-                            <button class="btn-icon" id="copy-response" title="Copier">📋</button>
-                            <button class="btn-icon" id="save-response" title="Enregistrer">💾</button>
-                        </div>
-                    </div>
-                    <div id="streaming-response" class="response-content"></div>
-                    <div id="loading" class="loading hidden">
-                        <div class="spinner"></div>
-                        <span>Chargement...</span>
-                    </div>
-                </div>
-
-                <div id="hint-options" class="hidden">
-                    <h3>Options supplémentaires</h3>
-                    <div class="hint-buttons">
-                        <button class="btn btn-outline" id="get-hint-1">Indice 1 (1 crédit)</button>
-                        <button class="btn btn-outline" id="get-hint-2">Indice 2 (1 crédit)</button>
-                        <button class="btn btn-outline" id="get-hint-3">Indice 3 (1 crédit)</button>
-                        <button class="btn btn-danger" id="get-full-solution">Solution complète (2 crédits)</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Learn a Concept Section -->
-            <section id="learn-concept" class="section hidden">
+        <!-- Learn Section -->
+        <section id="learn" class="section hidden">
+            <div class="section-header">
                 <h2>Learn a Concept</h2>
-                <p class="section-description">Apprenez un nouveau concept avec un parcours pédagogique</p>
-                
-                <div class="concept-form">
-                    <div class="form-group">
-                        <label for="concept-input">Concept à apprendre</label>
+                <p>Apprenez un nouveau concept avec un parcours pédagogique</p>
+            </div>
+            
+            <div class="learn-form">
+                <div class="form-group">
+                    <label for="concept-input">Concept à apprendre</label>
+                    <div class="input-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <path d="M14 2v6h6M12 18v-6M9 15h6"/>
+                        </svg>
                         <input type="text" id="concept-input" placeholder="Ex: Les équations du second degré">
                     </div>
-                    <div class="form-group">
-                        <label for="user-explanation">Ce que vous comprenez déjà (optionnel)</label>
-                        <textarea id="user-explanation" placeholder="Décrivez vos connaissances actuelles..." rows="4"></textarea>
-                    </div>
-                    <button class="btn btn-primary" id="start-learning">Commencer l'apprentissage</button>
                 </div>
+                <div class="form-group">
+                    <label for="user-explanation">Ce que vous comprenez déjà (optionnel)</label>
+                    <textarea id="user-explanation" placeholder="Décrivez vos connaissances actuelles..." rows="3"></textarea>
+                </div>
+                <button class="btn btn-primary btn-block" id="start-learning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Commencer l'apprentissage
+                </button>
+            </div>
 
-                <div id="learning-session" class="hidden">
-                    <div class="session-header">
-                        <h3>Session: <span id="session-concept"></span></h3>
-                        <button class="btn btn-secondary" id="end-learning">Terminer</button>
-                    </div>
-                    <div id="learning-chat" class="chat-container">
-                        <div id="learning-messages" class="chat-messages"></div>
-                        <div class="chat-input">
+            <div id="learning-session" class="learning-session hidden">
+                <div class="session-header">
+                    <h3>Session: <span id="session-concept"></span></h3>
+                    <button class="btn btn-secondary" id="end-learning">Terminer</button>
+                </div>
+                <div id="learning-chat" class="chat-container">
+                    <div id="learning-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
                             <input type="text" id="learning-input" placeholder="Répondez ou posez une question...">
-                            <button class="btn btn-primary" id="send-learning">Envoyer</button>
+                            <button class="btn btn-primary" id="send-learning">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- History Section -->
-            <section id="history" class="section hidden">
+        <!-- History Section -->
+        <section id="history" class="section hidden">
+            <div class="section-header">
                 <h2>Historique</h2>
-                <p class="section-description">Vos précédentes sessions</p>
-                
-                <div class="filters">
-                    <select id="history-filter">
-                        <option value="all">Tous</option>
-                        <option value="help-me">Help Me</option>
-                        <option value="learn-concept">Learn a Concept</option>
-                    </select>
-                    <button class="btn btn-secondary" id="clear-history">Effacer l'historique</button>
-                </div>
+                <p>Vos précédentes sessions</p>
+            </div>
+            
+            <div class="filters">
+                <select id="history-filter">
+                    <option value="all">Tous</option>
+                    <option value="help-me">Help Me</option>
+                    <option value="learn">Learn a Concept</option>
+                </select>
+            </div>
 
-                <div id="history-list" class="history-list"></div>
-            </section>
+            <div id="history-list" class="history-list"></div>
+        </section>
 
-            <!-- Account Section -->
-            <section id="account" class="section hidden">
+        <!-- Account Section -->
+        <section id="account" class="section hidden">
+            <div class="section-header">
                 <h2>Mon Compte</h2>
-                
-                <div class="account-info">
-                    <div class="info-card">
-                        <h3>Informations personnelles</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Nom d'utilisateur</label>
-                                <span id="account-username"></span>
+            </div>
+            
+            <div class="account-cards">
+                <div class="account-card">
+                    <div class="card-header">
+                        <h3>Informations</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
                             </div>
-                            <div class="info-item">
+                            <div class="info-content">
+                                <label>Nom d'utilisateur</label>
+                                <span id="account-username">Invité</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <path d="M22 6l-10 7L2 6"/>
+                                </svg>
+                            </div>
+                            <div class="info-content">
                                 <label>Email</label>
                                 <span id="account-email">Non renseigné</span>
                             </div>
-                            <div class="info-item">
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                </svg>
+                            </div>
+                            <div class="info-content">
                                 <label>Téléphone</label>
                                 <span id="account-phone">Non renseigné</span>
                             </div>
-                            <div class="info-item">
-                                <label>Abonnement</label>
-                                <span id="account-subscription">Free</span>
-                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="info-card">
+                <div class="account-card">
+                    <div class="card-header">
                         <h3>Crédits</h3>
-                        <div class="credits-info">
-                            <div class="credits-balance">
-                                <span class="balance-amount" id="account-credits">20</span>
-                                <span class="balance-label">crédits</span>
+                    </div>
+                    <div class="credits-display">
+                        <div class="credits-amount">
+                            <span id="account-credits">20</span>
+                            <span>crédits</span>
+                        </div>
+                        <div class="credits-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%" id="credits-progress"></div>
                             </div>
-                            <div class="credits-actions">
-                                <button class="btn btn-outline" id="watch-ad-btn">
-                                    📺 Regarder une pub (+1 crédit)
-                                </button>
-                                <button class="btn btn-primary" id="buy-credits-btn">
-                                    💰 Acheter des crédits
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <h3>Abonnements</h3>
-                        <div class="subscription-plans" id="subscription-plans">
-                            <p>Chargement...</p>
-                        </div>
-                    </div>
-
-                    <div class="info-card">
-                        <h3>Historique des paiements</h3>
-                        <div class="payment-history" id="payment-history">
-                            <p>Aucun paiement pour l'instant</p>
+                            <span>Free Tier</span>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
 
-        <!-- Modals -->
-        <div id="modal-overlay" class="modal-overlay hidden">
-            <div class="modal" id="buy-credits-modal">
-                <div class="modal-header">
-                    <h3>Acheter des crédits</h3>
-                    <button class="modal-close" id="close-buy-modal">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="credit-packs" id="credit-packs">
-                        <p>Chargement...</p>
+                <div class="account-card">
+                    <div class="card-header">
+                        <h3>Abonnement</h3>
+                    </div>
+                    <div class="subscription-info">
+                        <div class="subscription-status">
+                            <span class="status-badge free" id="account-subscription">Free</span>
+                        </div>
+                        <p>Seul le plan Free est disponible pour le moment</p>
                     </div>
                 </div>
             </div>
+        </section>
+    </main>
 
-            <div class="modal" id="subscribe-modal">
-                <div class="modal-header">
-                    <h3>Choisir un abonnement</h3>
-                    <button class="modal-close" id="close-subscribe-modal">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="subscription-modal-plans" id="subscription-modal-plans">
-                        <p>Chargement...</p>
+    <!-- AI Chat Sidebar (Mistral-like) -->
+    <aside class="chat-sidebar hidden">
+        <div class="chat-header">
+            <button class="chat-close" id="chat-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="chat-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <h3>Chat IA</h3>
+            </div>
+        </div>
+        <div class="chat-messages" id="ai-chat-messages">
+            <div class="chat-welcome">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <p>Posez-moi n'importe quelle question sur vos exercices !</p>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+                <textarea id="ai-chat-input" placeholder="Demandez à l'IA..." rows="1"></textarea>
+                <button class="btn btn-primary" id="send-ai-chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <p class="chat-info">1 crédit par question</p>
+        </div>
+    </aside>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="login-modal">
+            <div class="modal-header">
+                <h3>Se connecter</h3>
+                <button class="modal-close" id="close-login-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>Identifiant</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <input type="text" id="login-identifier" placeholder="Email, téléphone ou nom d'utilisateur" required>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="modal" id="payment-modal">
-                <div class="modal-header">
-                    <h3>Paiement Mobile Money</h3>
-                    <button class="modal-close" id="close-payment-modal">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="payment-form">
-                        <div class="form-group">
-                            <label>Opérateur</label>
-                            <select id="payment-operator">
-                                <option value="tmoney">TMoney</option>
-                                <option value="momo">Mobile Money (MTN/Airtel)</option>
-                            </select>
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <input type="password" id="login-password" placeholder="Votre mot de passe">
                         </div>
-                        <div class="form-group">
-                            <label>Numéro de téléphone</label>
-                            <input type="tel" id="payment-phone" placeholder="Ex: +228 90 00 00 00" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Montant</label>
-                            <input type="text" id="payment-amount" readonly>
-                        </div>
-                        <div class="payment-info">
-                            <p>Vous allez être redirigé vers la plateforme de paiement.</p>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Payer</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="login-modal">
-                <div class="modal-header">
-                    <h3>Se connecter</h3>
-                    <button class="modal-close" id="close-login-modal">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label>Identifiant (email, téléphone ou nom d'utilisateur)</label>
-                            <input type="text" id="login-identifier" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Mot de passe</label>
-                            <input type="password" id="login-password">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
-                        <p class="text-center">Ou <a href="#" id="show-register">Créer un compte</a></p>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal" id="register-modal">
-                <div class="modal-header">
-                    <h3>Créer un compte</h3>
-                    <button class="modal-close" id="close-register-modal">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="register-form">
-                        <div class="form-group">
-                            <label>Nom d'utilisateur</label>
-                            <input type="text" id="register-username" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email (optionnel)</label>
-                            <input type="email" id="register-email">
-                        </div>
-                        <div class="form-group">
-                            <label>Téléphone (optionnel)</label>
-                            <input type="tel" id="register-phone" placeholder="+228 90 00 00 00">
-                        </div>
-                        <div class="form-group">
-                            <label>Mot de passe</label>
-                            <input type="password" id="register-password">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">S'inscrire</button>
-                        <p class="text-center">Ou <a href="#" id="show-login">Se connecter</a></p>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Se connecter
+                    </button>
+                    <p class="modal-footer">Pas de compte ? <a href="#" id="show-register">S'inscrire</a></p>
+                </form>
             </div>
         </div>
 
-        <!-- Toast Notifications -->
-        <div id="toast" class="toast hidden"></div>
+        <div class="modal" id="register-modal">
+            <div class="modal-header">
+                <h3>Créer un compte</h3>
+                <button class="modal-close" id="close-register-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label>Nom d'utilisateur</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <input type="text" id="register-username" placeholder="Votre nom" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email (optionnel)</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <path d="M22 6l-10 7L2 6"/>
+                            </svg>
+                            <input type="email" id="register-email" placeholder="votre@email.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone (optionnel)</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                            <input type="tel" id="register-phone" placeholder="+228 90 00 00 00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <div class="input-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            <input type="password" id="register-password" placeholder="Créez un mot de passe">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        S'inscrire
+                    </button>
+                    <p class="modal-footer">Déjà un compte ? <a href="#" id="show-login">Se connecter</a></p>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <footer class="footer">
-        <p>HintAI - Développé avec ❤️ pour les élèves du Togo | <a href="#">Contact</a></p>
-    </footer>
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="analyser.js"></script>
     <script src="main.js"></script>

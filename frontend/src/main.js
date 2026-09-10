@@ -1,22 +1,25 @@
 // ===== Configuration =====
-const BACKEND_URL = 'http://localhost:8000';
-// const BACKEND_URL = 'https://hintai-backend.onrender.com';
+const BACKEND_URL = 'https://hintai-backend.onrender.com';
+// const BACKEND_URL = 'http://localhost:8000';
 
 // ===== State =====
 let currentUser = null;
 let currentSection = 'help-me';
 let currentMethod = null;
-let currentSession = null;
 let cameraStream = null;
 let capturedImage = null;
 let uploadedFile = null;
+let currentChatSession = null;
 
 // ===== DOM Elements =====
-const navBtns = document.querySelectorAll('.nav-btn');
+const navItems = document.querySelectorAll('.nav-item');
 const sections = document.querySelectorAll('.section');
 const methodCards = document.querySelectorAll('.method-card');
 const modalOverlay = document.getElementById('modal-overlay');
 const toast = document.getElementById('toast');
+const chatSidebar = document.querySelector('.chat-sidebar');
+const chatToggle = document.querySelector('.chat-toggle');
+const chatClose = document.getElementById('chat-close');
 
 // ===== Initialization =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,23 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
     initActions();
     initModals();
     initAccount();
+    initChatSidebar();
     loadUser();
 });
 
 // ===== Navigation =====
 function initNavigation() {
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const section = btn.dataset.section;
-            showSection(section);
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const section = item.dataset.section;
+            if (section) {
+                showSection(section);
+            }
         });
     });
 }
 
 function showSection(sectionName) {
-    // Update nav buttons
-    navBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.section === sectionName);
+    // Update nav items
+    navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.section === sectionName);
     });
     
     // Update sections
@@ -62,6 +68,11 @@ function showSection(sectionName) {
     
     // Reset input methods
     resetInputMethods();
+    
+    // Close chat sidebar on mobile
+    if (window.innerWidth < 768) {
+        closeChatSidebar();
+    }
 }
 
 // ===== Method Selection =====
@@ -78,9 +89,9 @@ function selectMethod(method) {
     resetInputMethods();
     currentMethod = method;
     
-    const inputPanel = document.getElementById(`${method}-input`);
-    if (inputPanel) {
-        inputPanel.classList.remove('hidden');
+    const panel = document.getElementById(`${method}-panel`);
+    if (panel) {
+        panel.classList.remove('hidden');
     }
     
     // Initialize specific method
@@ -92,18 +103,14 @@ function selectMethod(method) {
 function resetInputMethods() {
     currentMethod = null;
     
-    // Hide all input panels
+    // Hide all panels
     document.querySelectorAll('.input-panel').forEach(panel => {
         panel.classList.add('hidden');
     });
     
-    // Hide captured preview
-    document.getElementById('captured-preview').classList.add('hidden');
-    document.getElementById('upload-preview').classList.add('hidden');
-    
-    // Hide response
-    document.getElementById('ai-response').classList.add('hidden');
-    document.getElementById('hint-options').classList.add('hidden');
+    // Hide response and hint panels
+    document.getElementById('response-panel').classList.add('hidden');
+    document.getElementById('hint-panel').classList.add('hidden');
     
     // Stop camera
     stopCamera();
@@ -118,12 +125,11 @@ function resetInputMethods() {
 function initCamera() {
     document.getElementById('capture-btn').addEventListener('click', capturePhoto);
     document.getElementById('retake-btn').addEventListener('click', () => {
-        document.getElementById('captured-preview').classList.add('hidden');
+        document.getElementById('captured-panel').classList.add('hidden');
+        document.getElementById('camera-panel').classList.remove('hidden');
         startCamera();
     });
-    document.getElementById('analyze-captured').addEventListener('click', () => {
-        analyzeCapturedImage();
-    });
+    document.getElementById('analyze-captured').addEventListener('click', analyzeCapturedImage);
     document.getElementById('cancel-camera').addEventListener('click', () => {
         stopCamera();
         resetInputMethods();
@@ -132,7 +138,10 @@ function initCamera() {
 
 function startCamera() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' },
+            audio: false 
+        })
             .then(stream => {
                 cameraStream = stream;
                 const preview = document.getElementById('camera-preview');
@@ -170,8 +179,8 @@ function capturePhoto() {
     const capturedImg = document.getElementById('captured-image');
     capturedImg.src = capturedImage;
     
-    document.getElementById('camera-input').classList.add('hidden');
-    document.getElementById('captured-preview').classList.remove('hidden');
+    document.getElementById('camera-panel').classList.add('hidden');
+    document.getElementById('captured-panel').classList.remove('hidden');
     
     stopCamera();
 }
@@ -179,7 +188,6 @@ function capturePhoto() {
 function analyzeCapturedImage() {
     if (!capturedImage) return;
     
-    // Convert data URL to blob
     fetch(capturedImage)
         .then(res => res.blob())
         .then(blob => {
@@ -225,9 +233,7 @@ function initUpload() {
         }
     });
     
-    document.getElementById('cancel-upload').addEventListener('click', () => {
-        resetInputMethods();
-    });
+    document.getElementById('cancel-upload').addEventListener('click', resetInputMethods);
 }
 
 function handleFileUpload(file) {
@@ -239,23 +245,23 @@ function handleFileUpload(file) {
     
     if (file.type.startsWith('image/')) {
         previewImg.src = URL.createObjectURL(file);
-        previewImg.classList.remove('hidden');
+        previewImg.style.display = 'block';
     } else {
         previewImg.src = '';
-        previewImg.classList.add('hidden');
+        previewImg.style.display = 'none';
     }
     
     previewFilename.textContent = file.name;
     previewSize.textContent = formatFileSize(file.size);
     
-    document.getElementById('upload-zone').classList.add('hidden');
-    document.getElementById('upload-preview').classList.remove('hidden');
+    document.getElementById('upload-panel').classList.add('hidden');
+    document.getElementById('preview-panel').classList.remove('hidden');
 }
 
 function formatFileSize(bytes) {
     if (bytes < 1024) return `${bytes} octets`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} Ko`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} Mo`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
 // ===== Image Analysis =====
@@ -270,12 +276,10 @@ function analyzeImage(file) {
             return;
         }
         
-        // Create FormData for upload
         const formData = new FormData();
         formData.append('user_id', currentUser?.id || 'guest');
         formData.append('file', file);
         
-        // Determine endpoint based on file type
         const endpoint = file.type === 'application/pdf' ? '/help-me/pdf' : '/help-me/image';
         
         fetch(BACKEND_URL + endpoint, {
@@ -290,9 +294,11 @@ function analyzeImage(file) {
                 return;
             }
             
-            // Show response
             showResponse(data.response, data.text);
             updateCredits(data.credits);
+            
+            // Show hint options
+            document.getElementById('hint-panel').classList.remove('hidden');
         })
         .catch(error => {
             showLoading(false);
@@ -331,7 +337,7 @@ function analyzeText() {
         updateCredits(data.credits);
         
         // Show hint options
-        document.getElementById('hint-options').classList.remove('hidden');
+        document.getElementById('hint-panel').classList.remove('hidden');
     })
     .catch(error => {
         showLoading(false);
@@ -341,14 +347,29 @@ function analyzeText() {
 
 // ===== Response Handling =====
 function showResponse(response, extractedText = '') {
-    const responsePanel = document.getElementById('ai-response');
+    const responsePanel = document.getElementById('response-panel');
     const streamingResponse = document.getElementById('streaming-response');
     
-    streamingResponse.textContent = response;
+    // Format response with markdown-like formatting
+    const formattedResponse = formatResponse(response);
+    streamingResponse.innerHTML = formattedResponse;
     responsePanel.classList.remove('hidden');
     
     // Auto-scroll to response
-    responsePanel.scrollIntoView({ behavior: 'smooth' });
+    responsePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function formatResponse(text) {
+    // Basic markdown formatting
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '<p></p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^# (.*$)/gm, '<h4>$1</h4>')
+        .replace(/^- (.*$)/gm, '<li>$1</li>')
+        .replace(/^\d+\. (.*$)/gm, '<li>$1</li>');
 }
 
 function showLoading(show) {
@@ -368,7 +389,7 @@ function initActions() {
     document.getElementById('get-hint-3').addEventListener('click', () => getHint(3));
     document.getElementById('get-full-solution').addEventListener('click', getFullSolution);
     
-    // Copy and save response
+    // Copy response
     document.getElementById('copy-response').addEventListener('click', () => {
         const response = document.getElementById('streaming-response').textContent;
         navigator.clipboard.writeText(response);
@@ -380,17 +401,17 @@ function initActions() {
     document.getElementById('send-learning').addEventListener('click', sendLearningMessage);
     document.getElementById('end-learning').addEventListener('click', endLearningSession);
     
-    // Account actions - SUSPENDU
-    document.getElementById('watch-ad-btn').addEventListener('click', () => {
-        showToast('Fonctionnalité suspendue: les pubs récompensées ne sont pas disponibles', 'warning');
-    });
-    document.getElementById('buy-credits-btn').addEventListener('click', () => {
-        showToast('Fonctionnalité suspendue: l\'achat de crédits n\'est pas disponible', 'warning');
+    // User button
+    document.getElementById('user-btn').addEventListener('click', () => {
+        if (currentUser) {
+            showSection('account');
+        } else {
+            openModal('login-modal');
+        }
     });
     
     // Filters
     document.getElementById('history-filter').addEventListener('change', loadHistory);
-    document.getElementById('clear-history').addEventListener('click', clearHistory);
 }
 
 function getHint(number) {
@@ -493,23 +514,18 @@ function startLearningConcept() {
             return;
         }
         
-        // Start learning session
-        currentSession = {
+        currentChatSession = {
             concept,
-            userExplanation,
             messages: [
                 { role: 'ai', content: data.response }
             ]
         };
         
-        // Show learning session
         document.getElementById('concept-form').classList.add('hidden');
         document.getElementById('learning-session').classList.remove('hidden');
         document.getElementById('session-concept').textContent = concept;
         
-        // Add first message to chat
         addLearningMessage('ai', data.response);
-        
         updateCredits(data.credits);
     })
     .catch(error => {
@@ -525,17 +541,15 @@ function sendLearningMessage() {
     
     input.value = '';
     
-    // Add user message to chat
     addLearningMessage('user', message);
     
-    // Get previous response
-    const previousResponse = currentSession.messages[currentSession.messages.length - 1].content;
+    const previousResponse = currentChatSession.messages[currentChatSession.messages.length - 1].content;
     
     showLoading(true);
     
     const formData = new FormData();
     formData.append('user_id', currentUser?.id || 'guest');
-    formData.append('concept', currentSession.concept);
+    formData.append('concept', currentChatSession.concept);
     formData.append('previous_response', previousResponse);
     formData.append('user_input', message);
     
@@ -551,12 +565,8 @@ function sendLearningMessage() {
             return;
         }
         
-        // Add AI response to chat
         addLearningMessage('ai', data.response);
-        
-        // Update session
-        currentSession.messages.push({ role: 'ai', content: data.response });
-        
+        currentChatSession.messages.push({ role: 'ai', content: data.response });
         updateCredits(data.credits);
     })
     .catch(error => {
@@ -569,23 +579,109 @@ function addLearningMessage(role, content) {
     const messagesContainer = document.getElementById('learning-messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${role}`;
-    messageDiv.textContent = content;
+    messageDiv.innerHTML = formatResponse(content);
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 function endLearningSession() {
-    currentSession = null;
+    currentChatSession = null;
     document.getElementById('learning-session').classList.add('hidden');
-    document.getElementById('concept-form').classList.remove('hidden');
+    document.getElementById('learn').querySelector('.learn-form').classList.remove('hidden');
     document.getElementById('learning-messages').innerHTML = '';
     document.getElementById('concept-input').value = '';
     document.getElementById('user-explanation').value = '';
 }
 
+// ===== Chat Sidebar =====
+function initChatSidebar() {
+    chatToggle.addEventListener('click', toggleChatSidebar);
+    chatClose.addEventListener('click', closeChatSidebar);
+    
+    document.getElementById('send-ai-chat').addEventListener('click', sendAIChatMessage);
+    document.getElementById('ai-chat-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAIChatMessage();
+        }
+    });
+}
+
+function toggleChatSidebar() {
+    chatSidebar.classList.toggle('active');
+}
+
+function closeChatSidebar() {
+    chatSidebar.classList.remove('active');
+}
+
+function sendAIChatMessage() {
+    const input = document.getElementById('ai-chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    input.value = '';
+    
+    // Add user message
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    const userMessage = document.createElement('div');
+    userMessage.className = 'chat-message user';
+    userMessage.textContent = message;
+    messagesContainer.appendChild(userMessage);
+    
+    // Remove welcome message if exists
+    const welcomeMessage = messagesContainer.querySelector('.chat-welcome');
+    if (welcomeMessage) {
+        welcomeMessage.remove();
+    }
+    
+    // Show loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-message ai';
+    loadingDiv.id = 'ai-loading';
+    loadingDiv.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; margin: 0 auto;"></div>';
+    messagesContainer.appendChild(loadingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Send to backend
+    showLoading(true);
+    
+    const formData = new FormData();
+    formData.append('user_id', currentUser?.id || 'guest');
+    formData.append('exercise', message);
+    
+    fetch(BACKEND_URL + '/help-me/text', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        loadingDiv.remove();
+        
+        if (data.error) {
+            showToast(data.error, 'error');
+            return;
+        }
+        
+        // Add AI response
+        const aiMessage = document.createElement('div');
+        aiMessage.className = 'chat-message ai';
+        aiMessage.innerHTML = formatResponse(data.response);
+        messagesContainer.appendChild(aiMessage);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        updateCredits(data.credits);
+    })
+    .catch(error => {
+        showLoading(false);
+        loadingDiv.remove();
+        showToast(`Erreur: ${error.message}`, 'error');
+    });
+}
+
 // ===== Account =====
 function initAccount() {
-    // Login/Register
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
         login();
@@ -610,7 +706,6 @@ function initAccount() {
 }
 
 function loadUser() {
-    // Check if user is already logged in (from localStorage)
     const user = localStorage.getItem('hintai_user');
     if (user) {
         currentUser = JSON.parse(user);
@@ -620,11 +715,24 @@ function loadUser() {
 
 function updateUserInfo() {
     if (currentUser) {
-        document.getElementById('username').textContent = currentUser.username || 'Utilisateur';
-        document.getElementById('credits').textContent = `${currentUser.credits || 20} crédits`;
+        document.getElementById('credits').textContent = currentUser.credits || 20;
+        document.getElementById('account-username').textContent = currentUser.username || 'Utilisateur';
+        document.getElementById('account-email').textContent = currentUser.email || 'Non renseigné';
+        document.getElementById('account-phone').textContent = currentUser.phone || 'Non renseigné';
+        document.getElementById('account-credits').textContent = currentUser.credits || 20;
+        document.getElementById('account-subscription').textContent = currentUser.subscription || 'Free';
+        
+        // Update progress bar
+        const progress = Math.min((currentUser.credits || 20) / 20 * 100, 100);
+        document.getElementById('credits-progress').style.width = `${progress}%`;
     } else {
-        document.getElementById('username').textContent = 'Invité';
-        document.getElementById('credits').textContent = '20 crédits';
+        document.getElementById('credits').textContent = '20';
+        document.getElementById('account-username').textContent = 'Invité';
+        document.getElementById('account-email').textContent = 'Non renseigné';
+        document.getElementById('account-phone').textContent = 'Non renseigné';
+        document.getElementById('account-credits').textContent = '20';
+        document.getElementById('account-subscription').textContent = 'Free';
+        document.getElementById('credits-progress').style.width = '100%';
     }
 }
 
@@ -673,7 +781,6 @@ function login() {
         updateUserInfo();
         showToast(`Bienvenue, ${currentUser.username}!`, 'success');
         
-        // Reload account data
         if (currentSection === 'account') {
             loadAccountData();
         }
@@ -729,13 +836,6 @@ function register() {
     });
 }
 
-function logout() {
-    currentUser = null;
-    localStorage.removeItem('hintai_user');
-    updateUserInfo();
-    showToast('Déconnecté', 'success');
-}
-
 // ===== Account Data =====
 function loadAccountData() {
     if (!currentUser) {
@@ -744,7 +844,6 @@ function loadAccountData() {
         return;
     }
     
-    // Load user info
     fetch(BACKEND_URL + `/auth/me?user_id=${currentUser.id}`)
     .then(response => response.json())
     .then(data => {
@@ -753,75 +852,62 @@ function loadAccountData() {
         document.getElementById('account-phone').textContent = data.phone || 'Non renseigné';
         document.getElementById('account-subscription').textContent = data.subscription || 'Free';
         document.getElementById('account-credits').textContent = data.credits || 0;
-    });
-    
-    // Load subscription plans
-    loadSubscriptionPlans();
-    
-    // Load payment history
-    loadPaymentHistory();
-}
-
-function loadSubscriptionPlans() {
-    fetch(BACKEND_URL + '/subscriptions/plans')
-    .then(response => response.json())
-    .then(plans => {
-        const container = document.getElementById('subscription-plans');
-        container.innerHTML = '';
         
-        Object.entries(plans).forEach(([key, plan]) => {
-            const planDiv = document.createElement('div');
-            planDiv.className = `subscription-plan ${currentUser?.subscription === key ? 'active' : ''}`;
-            planDiv.innerHTML = `
-                <h4>${plan.name}</h4>
-                <div class="price">$${plan.price}/mois</div>
-                <div class="credits">${plan.credits} crédits/mois</div>
-            `;
-            planDiv.addEventListener('click', () => {
-                if (currentUser) {
-                    selectPlan(key);
-                } else {
-                    showToast('Veuillez vous connecter', 'error');
-                }
-            });
-            container.appendChild(planDiv);
-        });
+        const progress = Math.min((data.credits || 20) / 20 * 100, 100);
+        document.getElementById('credits-progress').style.width = `${progress}%`;
     });
 }
 
-function selectPlan(plan) {
-    // SUSPENDU: Aucun abonnement payant n'est disponible
-    showToast('Seul le plan Free est disponible pour le moment', 'warning');
-}
-
-function loadPaymentHistory() {
-    if (!currentUser) return;
+// ===== History =====
+function loadHistory() {
+    if (!currentUser) {
+        document.getElementById('history-list').innerHTML = '<p style="text-align: center; color: var(--gray);">Veuillez vous connecter pour voir l\'historique</p>';
+        return;
+    }
     
-    fetch(BACKEND_URL + `/payments/history?user_id=${currentUser.id}`)
+    const filter = document.getElementById('history-filter').value;
+    const endpoint = filter === 'all' ? `/history?user_id=${currentUser.id}` : `/history?user_id=${currentUser.id}&action=${filter}`;
+    
+    fetch(BACKEND_URL + endpoint)
     .then(response => response.json())
-    .then(payments => {
-        const container = document.getElementById('payment-history');
+    .then(items => {
+        const container = document.getElementById('history-list');
         
-        if (payments.length === 0) {
-            container.innerHTML = '<p>Aucun paiement pour l\'instant</p>';
+        if (items.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--gray);">Aucun historique pour l\'instant</p>';
             return;
         }
         
-        container.innerHTML = payments.map(payment => `
-            <div class="payment-item">
-                <div class="payment-item-info">
-                    <div>${payment.method} - ${payment.amount} ${payment.currency}</div>
-                    <div class="payment-item-status ${payment.status}">${payment.status}</div>
+        container.innerHTML = items.map(item => `
+            <div class="history-item">
+                <div class="history-item-header">
+                    <span class="history-item-action">${formatAction(item.action)}</span>
+                    <span class="history-item-time">${new Date(item.timestamp).toLocaleString('fr-FR', { date: 'short', time: 'short' })}</span>
                 </div>
-                <div>${new Date(payment.created_at).toLocaleDateString()}</div>
+                <div class="history-item-prompt">${escapeHtml(item.prompt.substring(0, 100))}${item.prompt.length > 100 ? '...' : ''}</div>
+                <div class="history-item-response">${escapeHtml(item.response.substring(0, 50))}${item.response.length > 50 ? '...' : ''}</div>
             </div>
         `).join('');
     });
 }
 
-// ===== Payment =====
+function formatAction(action) {
+    const actions = {
+        'help_me_text': 'Aide (Texte)',
+        'help_me_image': 'Aide (Image)',
+        'help_me_pdf': 'Aide (PDF)',
+        'hint_1': 'Indice 1',
+        'hint_2': 'Indice 2',
+        'hint_3': 'Indice 3',
+        'full_solution': 'Solution complète',
+        'learn_concept': 'Apprentissage',
+        'learn_continue': 'Suite apprentissage',
+    };
+    return actions[action] || action;
+}
+
+// ===== Modals =====
 function initModals() {
-    // Close modals
     document.querySelectorAll('.modal-close').forEach(btn => {
         btn.addEventListener('click', () => closeModal(btn.closest('.modal').id));
     });
@@ -831,16 +917,6 @@ function initModals() {
             closeAllModals();
         }
     });
-    
-    // Payment form
-    document.getElementById('payment-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        processPayment();
-    });
-    
-    // Load credit packs
-    loadCreditPacks();
-    loadSubscriptionModalPlans();
 }
 
 function openModal(modalId) {
@@ -862,135 +938,7 @@ function closeAllModals() {
     modalOverlay.classList.remove('active');
 }
 
-function loadCreditPacks() {
-    fetch(BACKEND_URL + '/subscriptions/packs')
-    .then(response => response.json())
-    .then(packs => {
-        const container = document.getElementById('credit-packs');
-        container.innerHTML = '';
-        
-        Object.entries(packs).forEach(([key, pack]) => {
-            const packDiv = document.createElement('div');
-            packDiv.className = 'credit-pack';
-            packDiv.innerHTML = `
-                <h4>${pack.name}</h4>
-                <div class="amount">$${pack.price}</div>
-                <div>${pack.credits} crédits</div>
-            `;
-            packDiv.addEventListener('click', () => {
-                if (currentUser) {
-                    selectCreditPack(key);
-                } else {
-                    showToast('Veuillez vous connecter', 'error');
-                }
-            });
-            container.appendChild(packDiv);
-        });
-    });
-}
-
-function selectCreditPack(pack) {
-    // SUSPENDU: Aucun pack de crédits n'est disponible
-    showToast('L\'achat de crédits n\'est pas disponible pour le moment', 'warning');
-}
-
-function loadSubscriptionModalPlans() {
-    fetch(BACKEND_URL + '/subscriptions/plans')
-    .then(response => response.json())
-    .then(plans => {
-        const container = document.getElementById('subscription-modal-plans');
-        container.innerHTML = '';
-        
-        Object.entries(plans).forEach(([key, plan]) => {
-            if (key === 'free') return; // Skip free plan
-            
-            const planDiv = document.createElement('div');
-            planDiv.className = 'subscription-plan-modal';
-            planDiv.innerHTML = `
-                <h4>${plan.name}</h4>
-                <div class="amount">$${plan.price}/mois</div>
-                <div>${plan.credits} crédits/mois</div>
-            `;
-            planDiv.addEventListener('click', () => {
-                selectPlan(key);
-                closeModal('subscribe-modal');
-            });
-            container.appendChild(planDiv);
-        });
-    });
-}
-
-function processPayment() {
-    // SUSPENDU: Aucun système de paiement n'est configuré
-    showToast('Les paiements ne sont pas disponibles pour le moment', 'warning');
-    closeAllModals();
-}
-
-// ===== Rewarded Ads =====
-function watchRewardedAd() {
-    // SUSPENDU: Les pubs récompensées ne sont pas disponibles
-    showToast('Fonctionnalité suspendue: les pubs récompensées ne sont pas disponibles', 'warning');
-}
-
-// ===== History =====
-function loadHistory() {
-    if (!currentUser) {
-        document.getElementById('history-list').innerHTML = '<p>Veuillez vous connecter pour voir l\'historique</p>';
-        return;
-    }
-    
-    const filter = document.getElementById('history-filter').value;
-    const endpoint = filter === 'all' ? `/history?user_id=${currentUser.id}` : `/history?user_id=${currentUser.id}&action=${filter}`;
-    
-    fetch(BACKEND_URL + endpoint)
-    .then(response => response.json())
-    .then(items => {
-        const container = document.getElementById('history-list');
-        
-        if (items.length === 0) {
-            container.innerHTML = '<p>Aucun historique pour l\'instant</p>';
-            return;
-        }
-        
-        container.innerHTML = items.map(item => `
-            <div class="history-item" onclick="loadHistoryItem('${item.id}')">
-                <div class="history-item-header">
-                    <span class="history-item-action">${formatAction(item.action)}</span>
-                    <span class="history-item-time">${new Date(item.timestamp).toLocaleString()}</span>
-                </div>
-                <div class="history-item-prompt">${item.prompt.substring(0, 100)}${item.prompt.length > 100 ? '...' : ''}</div>
-                <div class="history-item-response">${item.response.substring(0, 50)}${item.response.length > 50 ? '...' : ''}</div>
-            </div>
-        `).join('');
-    });
-}
-
-function formatAction(action) {
-    const actions = {
-        'help_me_text': 'Help Me (Texte)',
-        'help_me_image': 'Help Me (Image)',
-        'help_me_pdf': 'Help Me (PDF)',
-        'hint_1': 'Indice 1',
-        'hint_2': 'Indice 2',
-        'hint_3': 'Indice 3',
-        'full_solution': 'Solution complète',
-        'learn_concept': 'Learn a Concept',
-        'learn_continue': 'Learn (Suite)',
-    };
-    return actions[action] || action;
-}
-
-function clearHistory() {
-    if (!currentUser) return;
-    
-    if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique?')) {
-        // In production, add endpoint to clear history
-        showToast('Historique effacé', 'success');
-        loadHistory();
-    }
-}
-
-// ===== Toast Notifications =====
+// ===== Toast =====
 function showToast(message, type = 'info') {
     toast.textContent = message;
     toast.className = `toast ${type} show`;
@@ -1001,7 +949,27 @@ function showToast(message, type = 'info') {
 }
 
 // ===== Utility Functions =====
-function loadHistoryItem(id) {
-    // In production, fetch and display the full history item
-    showToast('Fonctionnalité à venir', 'info');
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
+
+// ===== Window Events =====
+window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768 && chatSidebar.classList.contains('active')) {
+        // Keep sidebar open on desktop
+    } else if (window.innerWidth < 768) {
+        // Close sidebar on mobile when resizing
+        closeChatSidebar();
+    }
+});
+
+// Close chat sidebar when clicking outside on mobile
+document.addEventListener('click', (e) => {
+    if (window.innerWidth < 768 && chatSidebar.classList.contains('active')) {
+        if (!chatSidebar.contains(e.target) && !chatToggle.contains(e.target)) {
+            closeChatSidebar();
+        }
+    }
+});
