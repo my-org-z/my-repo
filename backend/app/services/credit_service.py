@@ -19,19 +19,21 @@ ACTION_COSTS = {
 
 SUBSCRIPTION_PLANS = {
     "free": {"price": 0, "credits": 20, "name": "Free"},
-    "basic": {"price": 5, "credits": 40, "name": "Basic"},
-    "pro": {"price": 10, "credits": 80, "name": "Pro"},
-    "pro_plus": {"price": 15, "credits": 150, "name": "Pro Plus"},
-    "super": {"price": 20, "credits": 200, "name": "Super"},
-    "heavy": {"price": 30, "credits": 300, "name": "Heavy"},
+    # SUSPENDU: Aucun abonnement payant ne fonctionne sans méthode de paiement
+    # "basic": {"price": 5, "credits": 40, "name": "Basic"},
+    # "pro": {"price": 10, "credits": 80, "name": "Pro"},
+    # "pro_plus": {"price": 15, "credits": 150, "name": "Pro Plus"},
+    # "super": {"price": 20, "credits": 200, "name": "Super"},
+    # "heavy": {"price": 30, "credits": 300, "name": "Heavy"},
 }
 
 
 CREDIT_PACKS = {
-    "pack_10": {"credits": 10, "price": 1, "name": "10 crédits"},
-    "pack_20": {"credits": 20, "price": 2, "name": "20 crédits"},
-    "pack_50": {"credits": 50, "price": 5, "name": "50 crédits"},
-    "pack_100": {"credits": 100, "price": 8, "name": "100 crédits"},
+    # SUSPENDU: Aucun pack de crédits n'est disponible sans système de paiement
+    # "pack_10": {"credits": 10, "price": 1, "name": "10 crédits"},
+    # "pack_20": {"credits": 20, "price": 2, "name": "20 crédits"},
+    # "pack_50": {"credits": 50, "price": 5, "name": "50 crédits"},
+    # "pack_100": {"credits": 100, "price": 8, "name": "100 crédits"},
 }
 
 

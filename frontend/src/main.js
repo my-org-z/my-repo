@@ -380,9 +380,13 @@ function initActions() {
     document.getElementById('send-learning').addEventListener('click', sendLearningMessage);
     document.getElementById('end-learning').addEventListener('click', endLearningSession);
     
-    // Account actions
-    document.getElementById('watch-ad-btn').addEventListener('click', watchRewardedAd);
-    document.getElementById('buy-credits-btn').addEventListener('click', () => openModal('buy-credits-modal'));
+    // Account actions - SUSPENDU
+    document.getElementById('watch-ad-btn').addEventListener('click', () => {
+        showToast('Fonctionnalité suspendue: les pubs récompensées ne sont pas disponibles', 'warning');
+    });
+    document.getElementById('buy-credits-btn').addEventListener('click', () => {
+        showToast('Fonctionnalité suspendue: l\'achat de crédits n\'est pas disponible', 'warning');
+    });
     
     // Filters
     document.getElementById('history-filter').addEventListener('change', loadHistory);
@@ -786,22 +790,8 @@ function loadSubscriptionPlans() {
 }
 
 function selectPlan(plan) {
-    if (plan === 'free') {
-        showToast('Vous êtes déjà sur le plan Free', 'info');
-        return;
-    }
-    
-    // Store selected plan for payment
-    localStorage.setItem('hintai_selected_plan', plan);
-    openModal('payment-modal');
-    
-    // Set amount
-    fetch(BACKEND_URL + '/subscriptions/plans')
-    .then(response => response.json())
-    .then(plans => {
-        const selectedPlan = plans[plan];
-        document.getElementById('payment-amount').value = `$${selectedPlan.price} (${selectedPlan.credits} crédits)`;
-    });
+    // SUSPENDU: Aucun abonnement payant n'est disponible
+    showToast('Seul le plan Free est disponible pour le moment', 'warning');
 }
 
 function loadPaymentHistory() {
@@ -900,15 +890,8 @@ function loadCreditPacks() {
 }
 
 function selectCreditPack(pack) {
-    localStorage.setItem('hintai_selected_pack', pack);
-    openModal('payment-modal');
-    
-    fetch(BACKEND_URL + '/subscriptions/packs')
-    .then(response => response.json())
-    .then(packs => {
-        const selectedPack = packs[pack];
-        document.getElementById('payment-amount').value = `$${selectedPack.price} (${selectedPack.credits} crédits)`;
-    });
+    // SUSPENDU: Aucun pack de crédits n'est disponible
+    showToast('L\'achat de crédits n\'est pas disponible pour le moment', 'warning');
 }
 
 function loadSubscriptionModalPlans() {
@@ -938,108 +921,15 @@ function loadSubscriptionModalPlans() {
 }
 
 function processPayment() {
-    const operator = document.getElementById('payment-operator').value;
-    const phone = document.getElementById('payment-phone').value.trim();
-    
-    if (!phone) {
-        showToast('Veuillez saisir un numéro de téléphone', 'error');
-        return;
-    }
-    
-    // Check if we're buying credits or subscription
-    const selectedPack = localStorage.getItem('hintai_selected_pack');
-    const selectedPlan = localStorage.getItem('hintai_selected_plan');
-    
-    if (!selectedPack && !selectedPlan) {
-        showToast('Veuillez sélectionner un pack ou un abonnement', 'error');
-        return;
-    }
-    
-    showLoading(true);
-    
-    const formData = new FormData();
-    formData.append('user_id', currentUser.id);
-    formData.append('method', operator);
-    formData.append('phone', phone);
-    
-    let endpoint = '';
-    if (selectedPlan) {
-        formData.append('plan', selectedPlan);
-        endpoint = '/payments/subscribe';
-    } else if (selectedPack) {
-        formData.append('pack', selectedPack);
-        endpoint = '/payments/buy-credits';
-    }
-    
-    fetch(BACKEND_URL + endpoint, {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        showLoading(false);
-        closeAllModals();
-        
-        if (data.success) {
-            showToast(data.message, 'success');
-            
-            // Update user credits
-            if (data.credits) {
-                updateCredits(data.credits);
-            }
-            
-            // Clear selections
-            localStorage.removeItem('hintai_selected_pack');
-            localStorage.removeItem('hintai_selected_plan');
-            
-            // Reload account data
-            if (currentSection === 'account') {
-                loadAccountData();
-            }
-        } else {
-            showToast(data.message || 'Erreur de paiement', 'error');
-        }
-    })
-    .catch(error => {
-        showLoading(false);
-        showToast(`Erreur: ${error.message}`, 'error');
-    });
+    // SUSPENDU: Aucun système de paiement n'est configuré
+    showToast('Les paiements ne sont pas disponibles pour le moment', 'warning');
+    closeAllModals();
 }
 
 // ===== Rewarded Ads =====
 function watchRewardedAd() {
-    if (!currentUser) {
-        showToast('Veuillez vous connecter', 'error');
-        return;
-    }
-    
-    showLoading(true);
-    
-    const formData = new FormData();
-    formData.append('user_id', currentUser.id);
-    
-    // Simulate watching an ad (in production, this would be a real ad SDK)
-    setTimeout(() => {
-        fetch(BACKEND_URL + '/rewarded-ads/watch', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            showLoading(false);
-            if (data.error) {
-                showToast(data.error, 'error');
-                return;
-            }
-            
-            showToast(data.message, 'success');
-            updateCredits(data.credits);
-        })
-        .catch(error => {
-            showLoading(false);
-            showToast(`Erreur: ${error.message}`, 'error');
-        });
-    }, 1500); // Simulate 1.5 second ad
+    // SUSPENDU: Les pubs récompensées ne sont pas disponibles
+    showToast('Fonctionnalité suspendue: les pubs récompensées ne sont pas disponibles', 'warning');
 }
 
 // ===== History =====

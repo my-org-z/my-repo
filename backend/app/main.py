@@ -145,21 +145,22 @@ def get_user_credits(user_id: str = Query(...), db: Session = Depends(get_db)):
 
 @app.post("/rewarded-ads/watch")
 def watch_ad(user_id: str = Form(...), db: Session = Depends(get_db)):
-    add_credits(db, user_id, 1)
-    update_streak(db, user_id)
-    return {"message": "+1 crédit ajouté !", "credits": get_credits(db, user_id)}
+    # SUSPENDU: Les pubs récompensées ne sont pas configurées pour le moment
+    return {"message": "Fonctionnalité suspendue: les pubs récompensées ne sont pas disponibles pour le moment", "credits": get_credits(db, user_id)}
 
 
 # ============ ABONNEMENTS ============
 
 @app.get("/subscriptions/plans")
 def plans():
-    return get_plans()
+    # SUSPENDU: Aucun abonnement payant ne fonctionne sans méthode de paiement
+    return {"free": {"price": 0, "credits": 20, "name": "Free"}, "message": "Seul le plan Free est disponible pour le moment"}
 
 
 @app.get("/subscriptions/packs")
 def packs():
-    return get_packs()
+    # SUSPENDU: Les packs de crédits ne fonctionnent pas sans paiement
+    return {"message": "Les packs de crédits ne sont pas disponibles pour le moment"}
 
 
 @app.get("/subscriptions/me")
@@ -167,8 +168,7 @@ def my_subscription(user_id: str = Query(...), db: Session = Depends(get_db)):
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(404, "Utilisateur non trouvé")
-    plan = get_plans().get(user.subscription, get_plans()["free"])
-    return {"plan": user.subscription, "name": plan["name"], "credits": plan["credits"], "price": plan["price"]}
+    return {"plan": user.subscription, "name": "Free", "credits": 20, "price": 0, "message": "Seul le plan Free est disponible"}
 
 
 # ============ PAIEMENTS ============
@@ -181,9 +181,8 @@ def subscribe(
     phone: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
-    if method == "tmoney" and not phone:
-        raise HTTPException(400, "Numéro de téléphone requis pour TMoney")
-    return process_payment(db, user_id, plan=plan, method=method, phone=phone)
+    # SUSPENDU: Aucun système de paiement n'est configuré pour le moment
+    return {"success": False, "message": "Les abonnements ne sont pas disponibles pour le moment. Seul le plan Free est actif."}
 
 
 @app.post("/payments/buy-credits")
@@ -194,9 +193,8 @@ def buy_credits(
     phone: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
-    if method == "tmoney" and not phone:
-        raise HTTPException(400, "Numéro de téléphone requis pour TMoney")
-    return process_payment(db, user_id, pack=pack, method=method, phone=phone)
+    # SUSPENDU: Aucun système de paiement n'est configuré pour le moment
+    return {"success": False, "message": "L'achat de crédits n'est pas disponible pour le moment."}
 
 
 @app.post("/payments/verify")
@@ -205,26 +203,14 @@ def verify(
     method: str = Form("tmoney"),
     db: Session = Depends(get_db),
 ):
-    return verify_payment(db, reference, method)
+    # SUSPENDU: Aucun système de paiement n'est configuré pour le moment
+    return {"success": False, "message": "La vérification de paiement n'est pas disponible pour le moment."}
 
 
 @app.get("/payments/history")
 def payment_history(user_id: str = Query(...), limit: int = 50, db: Session = Depends(get_db)):
-    payments = get_user_payments(db, user_id, limit)
-    return [
-        {
-            "id": p.id,
-            "amount": p.amount,
-            "currency": p.currency,
-            "method": p.method,
-            "plan": p.plan,
-            "credit_pack": p.credit_pack,
-            "status": p.status,
-            "reference": p.reference,
-            "created_at": p.created_at,
-        }
-        for p in payments
-    ]
+    # SUSPENDU: Aucun paiement n'a pu être effectué
+    return []
 
 
 # ============ HELP ME ============

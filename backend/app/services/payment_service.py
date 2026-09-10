@@ -10,16 +10,17 @@ import uuid
 class MobileMoneyAPI:
     @staticmethod
     def initiate(operator: str, phone: str, amount: float, reference: str) -> Dict:
+        # SUSPENDU: TMoney/MoMo non configurés
         return {
-            "success": True,
-            "message": f"Paiement {operator} initialisé",
+            "success": False,
+            "message": "Les paiements Mobile Money ne sont pas configurés pour le moment",
             "reference": reference,
-            "payment_url": f"https://{operator}.tg/pay?ref={reference}",
         }
 
     @staticmethod
     def verify(operator: str, reference: str) -> Dict:
-        return {"success": True, "status": "completed", "transaction_id": reference}
+        # SUSPENDU: TMoney/MoMo non configurés
+        return {"success": False, "status": "failed", "message": "Vérification impossible - système de paiement non configuré"}
 
 
 def create_payment(db: Session, user_id: str, amount: float, method: str, plan: Optional[str] = None, pack: Optional[str] = None) -> Payment:
