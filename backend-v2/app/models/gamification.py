@@ -3,10 +3,10 @@ Gamification models for HintAI V2.
 Includes achievements, XP, and leaderboards.
 """
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 
 
@@ -52,10 +52,6 @@ class UserAchievement(Base):
     # Relationships
     user = relationship("User", back_populates="achievements")
     
-    __table_args__ = (
-        UniqueConstraint("user_id", "achievement_type", name="uq_user_achievement"),
-    )
-    
     def __repr__(self):
         return f"<UserAchievement(user_id={self.user_id}, achievement_type={self.achievement_type})>"
 
@@ -75,7 +71,7 @@ class UserXP(Base):
     description = Column(Text)
     
     # Metadata
-    metadata = Column(JSON, default={})
+    extra_data = Column(JSON, default={})
     reference_id = Column(String(100))  # Reference to related entity
     
     # Timestamps
@@ -116,10 +112,6 @@ class Leaderboard(Base):
     
     # Relationships
     user = relationship("User")
-    
-    __table_args__ = (
-        UniqueConstraint("user_id", "period", "period_start", name="uq_leaderboard_user_period"),
-    )
     
     def __repr__(self):
         return f"<Leaderboard(user_id={self.user_id}, period={self.period}, rank={self.rank})>"

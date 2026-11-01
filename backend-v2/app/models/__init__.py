@@ -1,6 +1,8 @@
 # Models for HintAI V2
 # SQLAlchemy models for database tables
 
+from app.core.database import Base
+
 from .user import User, UserLogin, UserSubscription, UserRole, UserSubscriptionStatus
 from .school import SchoolLevel, SchoolClass, Subject, Chapter, subject_classes
 from .exam import (

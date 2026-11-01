@@ -6,7 +6,7 @@ Includes study sessions, goals, plans, and events.
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 
 

@@ -3,10 +3,10 @@ Exam-related models for HintAI V2.
 Includes exam types, papers, documents, solutions, favorites, attempts, answers, and results.
 """
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 
 
@@ -80,7 +80,7 @@ class ExamPaper(Base):
     
     # SEO & Metadata
     tags = Column(JSON, default=[])  # List of tags for filtering
-    metadata = Column(JSON, default={})  # Additional metadata
+    extra_data = Column(JSON, default={})  # Additional metadata
     
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
@@ -188,12 +188,14 @@ class ExamFavorite(Base):
     user = relationship("User", back_populates="exam_favorites")
     exam_paper = relationship("ExamPaper", back_populates="favorites")
     
-    __table_args__ = (
-        UniqueConstraint("user_id", "exam_paper_id", name="uq_user_exam_favorite"),
-    )
-    
     def __repr__(self):
         return f"<ExamFavorite(user_id={self.user_id}, exam_paper_id={self.exam_paper_id})>"
+
+
+# Fix: Define UniqueConstraint for ExamFavorite
+ExamFavorite.__table_args__ = (
+    UniqueConstraint("user_id", "exam_paper_id", name="uq_user_exam_favorite"),
+)
 
 
 class ExamAttempt(Base):

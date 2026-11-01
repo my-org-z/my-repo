@@ -2,10 +2,10 @@
 Study group models for HintAI V2.
 """
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 
 
@@ -73,12 +73,14 @@ class StudyGroupMember(Base):
     group = relationship("StudyGroup", back_populates="members")
     user = relationship("User", back_populates="study_group_memberships")
     
-    __table_args__ = (
-        UniqueConstraint("group_id", "user_id", name="uq_group_user"),
-    )
-    
     def __repr__(self):
         return f"<StudyGroupMember(group_id={self.group_id}, user_id={self.user_id}, role={self.role})>"
+
+
+# Fix: Define UniqueConstraint for StudyGroupMember
+StudyGroupMember.__table_args__ = (
+    UniqueConstraint("group_id", "user_id", name="uq_group_user"),
+)
 
 
 # Fix: Define UniqueConstraint for StudyGroupMember

@@ -3,29 +3,18 @@
 
 from fastapi import FastAPI
 
-app = FastAPI()
-
-# Import routers to register routes
-from app.api import (
-    auth_router,
-    users_router,
-    exams_router,
-    credits_router,
-    payments_router,
-    ai_router,
-    study_router,
-    gamification_router,
+# Create FastAPI app
+app = FastAPI(
+    title="HintAI V2 API",
+    description="AI-Powered Educational Platform for K12 & High School Students",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
-# Register routers
-app.include_router(auth_router.router, prefix="/api/auth", tags=["auth"])
-app.include_router(users_router.router, prefix="/api/users", tags=["users"])
-app.include_router(exams_router.router, prefix="/api/exams", tags=["exams"])
-app.include_router(credits_router.router, prefix="/api/credits", tags=["credits"])
-app.include_router(payments_router.router, prefix="/api/payments", tags=["payments"])
-app.include_router(ai_router.router, prefix="/api/ai", tags=["ai"])
-app.include_router(study_router.router, prefix="/api/study", tags=["study"])
-app.include_router(gamification_router.router, prefix="/api/gamification", tags=["gamification"])
+# Import and register routes after app creation
+# This is done here to avoid circular imports
 
 
 @app.get("/api/health")

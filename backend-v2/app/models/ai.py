@@ -3,12 +3,12 @@ AI-related models for HintAI V2.
 Includes document embeddings and knowledge graph concepts.
 """
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from pgvector.sqlalchemy import Vector
 import numpy as np
 
@@ -31,7 +31,7 @@ class DocumentEmbedding(Base):
     embedding = Column(Vector(1536), nullable=False)
     
     # Metadata
-    metadata = Column(JSON, default={})  # Additional metadata (e.g., page number, section)
+    extra_data = Column(JSON, default={})  # Additional metadata (e.g., page number, section)
     
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())

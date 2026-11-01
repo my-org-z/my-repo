@@ -5,7 +5,7 @@ Database configuration for HintAI V2 using SQLAlchemy with async support.
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.declarative import declarative_base
-from backend_v2.app.core.config import settings
+from app.core.config import settings
 import logging
 
 # Create async engine
@@ -30,6 +30,8 @@ async_session = async_sessionmaker(
 # Base class for models
 Base = declarative_base()
 
+# SessionLocal for sync usage (if needed)
+SessionLocal = async_session
 
 # Dependency to get DB session
 async def get_db():

@@ -5,7 +5,7 @@ User models for HintAI V2.
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 import datetime
 

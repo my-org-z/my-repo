@@ -3,9 +3,9 @@ School-related models for HintAI V2.
 Includes levels, classes, subjects, and chapters.
 """
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 
 
 class SchoolLevel(Base):

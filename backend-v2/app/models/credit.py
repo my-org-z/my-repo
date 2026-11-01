@@ -5,7 +5,7 @@ Credit and payment models for HintAI V2.
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend_v2.app.core.database import Base
+from app.core.database import Base
 from enum import Enum
 
 
@@ -98,7 +98,7 @@ class CreditTransaction(Base):
     description = Column(Text)
     
     # Metadata
-    metadata = Column(JSON, default={})  # Additional details (e.g., {"plan": "pro", "duration": "1 month"})
+    extra_data = Column(JSON, default={})  # Additional details (e.g., {"plan": "pro", "duration": "1 month"})
     reference_id = Column(String(100))  # Reference to related entity (e.g., payment_id, exam_id)
     
     # Timestamps
@@ -134,7 +134,7 @@ class Payment(Base):
     failure_reason = Column(Text)
     
     # Metadata
-    metadata = Column(JSON, default={})  # Additional details from payment provider
+    extra_data = Column(JSON, default={})  # Additional details from payment provider
     
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from backend_v2.app.core.config import settings
+from app.core.config import settings
 import logging
 
 # Password hashing context
