@@ -10,12 +10,12 @@ services:
       pip install --no-cache-dir -r requirements.txt
     envVars:
       - key: MISTRAL_API_KEY
-        value: Ra2h2yPHCy1fysPKO6CJaeMtPwGI0naz
+        sync: false
       - key: MISTRAL_MODEL
         value: pixtral-12b
       - key: SECRET_KEY
-        value: hintai_secret_2024_production
+        sync: false
       - key: DATABASE_URL
-        value: postgresql://hintai_db_user:BZaodgVH83BkW2YYyUn5rKNGu4osV4Yx@dpg-daguisuk1f9s73e0p0ag-a.oregon-postgres.render.com/hintai_db
+        sync: false
       - key: ENVIRONMENT
         value: production
