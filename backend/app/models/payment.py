@@ -4,7 +4,7 @@ from enum import Enum
 from .base import Base
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(Enum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
