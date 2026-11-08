@@ -10,6 +10,10 @@ let cameraStream = null;
 let capturedImage = null;
 let uploadedFile = null;
 let currentChatSession = null;
+let currentExercise = null;
+let hintsUsed = [];
+let learningSession = null;
+let currentQuiz = null;
 
 // ===== DOM Elements =====
 const navItems = document.querySelectorAll('.nav-item');
@@ -389,6 +393,12 @@ function initActions() {
     document.getElementById('get-hint-3').addEventListener('click', () => getHint(3));
     document.getElementById('get-full-solution').addEventListener('click', getFullSolution);
     
+    // Similar exercise button
+    const similarBtn = document.getElementById('similar-exercise-btn');
+    if (similarBtn) {
+        similarBtn.addEventListener('click', getSimilarExercise);
+    }
+    
     // Copy response
     document.getElementById('copy-response').addEventListener('click', () => {
         const response = document.getElementById('streaming-response').textContent;
@@ -421,12 +431,23 @@ function getHint(number) {
         return;
     }
     
+    // Vérifier si cet indice a déjà été utilisé
+    if (hintsUsed.includes(number)) {
+        showToast(`Vous avez déjà utilisé l'indice ${number}`, 'info');
+        return;
+    }
+    
     showLoading(true);
     
     const formData = new FormData();
     formData.append('user_id', currentUser?.id || 'guest');
     formData.append('exercise', exercise);
     formData.append('hint_number', number);
+    
+    // Envoyer les indices précédents si disponibles
+    if (hintsUsed.length > 0) {
+        formData.append('previous_hints', hintsUsed.join(','));
+    }
     
     fetch(BACKEND_URL + '/help-me/hint', {
         method: 'POST',
@@ -442,11 +463,31 @@ function getHint(number) {
         
         showResponse(data.response);
         updateCredits(data.credits);
+        
+        // Marquer cet indice comme utilisé
+        hintsUsed.push(number);
+        currentExercise = exercise;
+        
+        // Mettre à jour l'interface des indices
+        updateHintButtons();
     })
     .catch(error => {
         showLoading(false);
         showToast(`Erreur: ${error.message}`, 'error');
     });
+}
+
+function updateHintButtons() {
+    // Désactiver les boutons des indices déjà utilisés
+    for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`get-hint-${i}`);
+        if (btn) {
+            if (hintsUsed.includes(i)) {
+                btn.classList.add('used');
+                btn.disabled = true;
+            }
+        }
+    }
 }
 
 function getFullSolution() {
@@ -476,11 +517,74 @@ function getFullSolution() {
         
         showResponse(data.response);
         updateCredits(data.credits);
+        currentExercise = exercise;
+        
+        // Masquer les boutons d'indices après la solution complète
+        document.getElementById('hint-panel').classList.add('hidden');
+        
+        // Afficher le bouton pour un exercice similaire
+        showSimilarExerciseButton(exercise);
     })
     .catch(error => {
         showLoading(false);
         showToast(`Erreur: ${error.message}`, 'error');
     });
+}
+
+function getSimilarExercise() {
+    if (!currentExercise) {
+        showToast('Aucun exercice analysé récemment', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    const formData = new FormData();
+    formData.append('user_id', currentUser?.id || 'guest');
+    formData.append('exercise', currentExercise);
+    
+    fetch(BACKEND_URL + '/help-me/similar-exercise', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.error) {
+            showToast(data.error, 'error');
+            return;
+        }
+        
+        updateCredits(data.credits);
+        
+        // Afficher le nouvel exercice
+        const similarExercise = data.exercise;
+        showToast(`Nouvel exercice similaire généré!`, 'success');
+        
+        // Effacer l'ancien exercice et mettre le nouveau
+        document.getElementById('exercise-text').value = similarExercise;
+        currentExercise = similarExercise;
+        hintsUsed = [];
+        
+        // Réinitialiser l'interface
+        document.getElementById('response-panel').classList.add('hidden');
+        document.getElementById('hint-panel').classList.add('hidden');
+        document.getElementById('similar-exercise-panel').classList.add('hidden');
+        
+        showToast(`Essayez de résoudre: ${similarExercise.substring(0, 50)}...`, 'info');
+    })
+    .catch(error => {
+        showLoading(false);
+        showToast(`Erreur: ${error.message}`, 'error');
+    });
+}
+
+function showSimilarExerciseButton(exercise) {
+    currentExercise = exercise;
+    const similarBtn = document.getElementById('similar-exercise-btn');
+    if (similarBtn) {
+        similarBtn.classList.remove('hidden');
+    }
 }
 
 // ===== Learn a Concept =====

@@ -9,6 +9,13 @@ from app.core.config import settings
 from app.core.security import create_token, verify_password as verify_pwd
 from app.ai.client import get_ai_response, get_ai_stream
 from app.ai.vision import analyze_image, extract_text, enhance_image
+from app.ai.prompts import (
+    HELP_ME_ANALYSIS_PROMPT, HELP_ME_HINT_PROMPTS, HELP_ME_FULL_SOLUTION_PROMPT,
+    HELP_ME_SIMILAR_EXERCISE_PROMPT, LEARN_CONCEPT_INITIAL_PROMPT,
+    LEARN_CONCEPT_CONTINUE_PROMPT, LEARN_CONCEPT_QUIZ_PROMPT,
+    LEARN_CONCEPT_PERSONALIZED_EXERCISE_PROMPT, LEARN_CONCEPT_CORRECTION_PROMPT,
+    LEVELS
+)
 from app.utils.helpers import process_image, resize_image, convert_pdf_to_images
 from app.services.storage import get_db, init_db
 from app.services.user_service import (
@@ -20,6 +27,7 @@ from app.services.payment_service import process_payment, verify_payment, get_us
 from app.models.user import User
 from app.models.exercise import Exercise
 from app.models.payment import Payment, PaymentStatus
+from typing import Optional, List, Dict, Any
 
 
 app = FastAPI(
@@ -229,24 +237,21 @@ def help_me_text(
     if not can_perform(db, user_id, "ai_analysis_help_me"):
         raise HTTPException(400, f"Il faut {ACTION_COSTS['ai_analysis_help_me']} crédits")
 
-    prompt = f"""Tu es un professeur d'aide aux devoirs. Analyse cet exercice et fournis une réponse progressive:
-Exercice: {exercise}
-
-Réponds en suivant ces étapes:
-1. Compréhension de l'exercice (1 phrase)
-2. Indice 1 (pour commencer)
-3. Indice 2 (si l'élève bloque)
-4. Indice 3 (si l'élève bloque toujours)
-5. Solution complète (si demandé)
-
-Commence par l'étape 1."""
+    # Utiliser le prompt pédagogique amélioré
+    prompt = HELP_ME_ANALYSIS_PROMPT.format(exercise=exercise)
 
     response = get_ai_response(prompt)
     perform(db, user_id, "ai_analysis_help_me")
     update_streak(db, user_id)
     save_history(db, user_id, "help_me_text", exercise, response, ACTION_COSTS["ai_analysis_help_me"])
 
-    return {"response": response, "credits": get_credits(db, user_id)}
+    return {
+        "response": response, 
+        "credits": get_credits(db, user_id),
+        "exercise": exercise,
+        "hint_available": True,
+        "solution_available": True
+    }
 
 
 @app.post("/help-me/image")
@@ -343,6 +348,7 @@ def get_hint(
     user_id: str = Form(...),
     exercise: str = Form(...),
     hint_number: int = Query(1, ge=1, le=3),
+    previous_hints: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     user = get_user_by_id(db, user_id)
@@ -354,13 +360,26 @@ def get_hint(
     if not can_perform(db, user_id, action):
         raise HTTPException(400, f"Il faut {ACTION_COSTS[action]} crédit")
 
-    prompt = f"Fournis l'indice {hint_number} pour cet exercice: {exercise}"
+    # Utiliser le prompt pédagogique pour les indices
+    prompt = HELP_ME_HINT_PROMPTS[hint_number].format(
+        exercise=exercise,
+        previous_hint=previous_hints or "Aucun indice précédent"
+    )
+    
+    if hint_number > 1:
+        prompt = prompt.replace("{previous_hints}", previous_hints or "Aucun")
+    
     response = get_ai_response(prompt)
     perform(db, user_id, action)
     update_streak(db, user_id)
     save_history(db, user_id, action, exercise, response, ACTION_COSTS[action])
 
-    return {"response": response, "credits": get_credits(db, user_id)}
+    return {
+        "response": response, 
+        "credits": get_credits(db, user_id),
+        "hint_number": hint_number,
+        "exercise": exercise
+    }
 
 
 # ============ SOLUTION COMPLÈTE ============
@@ -379,27 +398,97 @@ def full_solution(
     if not can_perform(db, user_id, "full_solution"):
         raise HTTPException(400, f"Il faut {ACTION_COSTS['full_solution']} crédits")
 
-    prompt = f"""Fournis la solution complète et détaillée pour cet exercice: {exercise}
-Structure:
-1. Étapes de résolution
-2. Calculs intermédiaires
-3. Réponse finale"""
+    # Utiliser le prompt pédagogique pour la solution complète
+    prompt = HELP_ME_FULL_SOLUTION_PROMPT.format(exercise=exercise)
 
     response = get_ai_response(prompt)
     perform(db, user_id, "full_solution")
     update_streak(db, user_id)
     save_history(db, user_id, "full_solution", exercise, response, ACTION_COSTS["full_solution"])
 
-    return {"response": response, "credits": get_credits(db, user_id)}
+    return {
+        "response": response, 
+        "credits": get_credits(db, user_id),
+        "exercise": exercise
+    }
 
 
 # ============ LEARN A CONCEPT ============
+
+@app.get("/learn-concept/levels")
+def get_education_levels():
+    """Retourne la liste des niveaux d'études disponibles"""
+    return {
+        "levels": [
+            {
+                "id": "collège",
+                "name": "Collège",
+                "description": "Explications simples, analogies, exemples concrets du quotidien",
+                "age_range": "11-15 ans",
+                "difficulty": "facile"
+            },
+            {
+                "id": "lycée",
+                "name": "Lycée",
+                "description": "Explications standards, formules de base, exemples pratiques",
+                "age_range": "15-18 ans",
+                "difficulty": "moyen"
+            },
+            {
+                "id": "universitaire",
+                "name": "Universitaire",
+                "description": "Explications techniques, démonstrations, cas complexes",
+                "age_range": "18+ ans",
+                "difficulty": "difficile"
+            }
+        ]
+    }
+
+
+@app.get("/learn-concept/subjects")
+def get_subjects():
+    """Retourne la liste des matières disponibles"""
+    return {
+        "subjects": {
+            "mathématiques": {
+                "name": "Mathématiques",
+                "topics": [
+                    "Algèbre", "Géométrie", "Trigonométrie", "Analyse", "Statistiques",
+                    "Équations", "Fonctions", "Dérivées", "Intégrales", "Probabilités"
+                ]
+            },
+            "physique": {
+                "name": "Physique",
+                "topics": ["Mécanique", "Électricité", "Optique", "Thermodynamique", "Ondes"]
+            },
+            "chimie": {
+                "name": "Chimie",
+                "topics": [
+                    "Atomes et molécules", "Réactions chimiques", "Équilibre chimique",
+                    "Acides et bases", "Chimie organique"
+                ]
+            },
+            "biologie": {
+                "name": "Biologie",
+                "topics": ["Cellule", "Génétique", "Évolution", "Écologie", "Physiologie"]
+            },
+            "informatique": {
+                "name": "Informatique",
+                "topics": [
+                    "Algorithmes", "Programmation", "Structures de données",
+                    "Bases de données", "Réseaux"
+                ]
+            }
+        }
+    }
+
 
 @app.post("/learn-concept")
 def learn_concept(
     user_id: str = Form(...),
     concept: str = Form(...),
     user_explanation: Optional[str] = Form(None),
+    level: str = Form("lycée"),
     db: Session = Depends(get_db),
 ):
     user = get_user_by_id(db, user_id)
@@ -410,21 +499,24 @@ def learn_concept(
     if not can_perform(db, user_id, "learn_explanation"):
         raise HTTPException(400, f"Il faut {ACTION_COSTS['learn_explanation']} crédits")
 
-    prompt = f"""Tu es un professeur patient. Explique ce concept à un élève de 14 ans: {concept}
-Structure:
-1. Définition simple
-2. Exemple concret
-3. Question pour vérifier la compréhension"""
-
-    if user_explanation:
-        prompt += f"\nL'élève pense comprendre: {user_explanation}. Corrigé si nécessaire."
+    # Utiliser le prompt pédagogique adapté
+    prompt = LEARN_CONCEPT_INITIAL_PROMPT.format(
+        concept=concept,
+        level=level,
+        user_explanation=user_explanation or "L'élève n'a pas encore expliqué ce qu'il comprend"
+    )
 
     response = get_ai_response(prompt)
     perform(db, user_id, "learn_explanation")
     update_streak(db, user_id)
     save_history(db, user_id, "learn_concept", concept, response, ACTION_COSTS["learn_explanation"])
 
-    return {"response": response, "credits": get_credits(db, user_id)}
+    return {
+        "response": response, 
+        "credits": get_credits(db, user_id),
+        "concept": concept,
+        "level": level
+    }
 
 
 @app.post("/learn-concept/continue")
@@ -433,6 +525,7 @@ def learn_continue(
     concept: str = Form(...),
     previous_response: str = Form(...),
     user_input: str = Form(...),
+    level: str = Form("lycée"),
     db: Session = Depends(get_db),
 ):
     user = get_user_by_id(db, user_id)
@@ -443,20 +536,206 @@ def learn_continue(
     if not can_perform(db, user_id, "learn_question"):
         raise HTTPException(400, f"Il faut {ACTION_COSTS['learn_question']} crédit")
 
-    prompt = f"""Suite de l'apprentissage sur: {concept}
-Précédente réponse: {previous_response}
-Réponse élève: {user_input}
-Réponds de manière adaptée:
-- Si compris: propose un exercice simple
-- Si difficultés: donne un indice ou explication
-- Si question: réponds clairement"""
+    # Utiliser le prompt pédagogique adapté
+    prompt = LEARN_CONCEPT_CONTINUE_PROMPT.format(
+        concept=concept,
+        level=level,
+        previous_response=previous_response,
+        user_input=user_input
+    )
 
     response = get_ai_response(prompt)
     perform(db, user_id, "learn_question")
     update_streak(db, user_id)
     save_history(db, user_id, "learn_continue", user_input, response, ACTION_COSTS["learn_question"])
 
-    return {"response": response, "credits": get_credits(db, user_id)}
+    return {
+        "response": response, 
+        "credits": get_credits(db, user_id),
+        "concept": concept,
+        "level": level
+    }
+
+
+# ============ LEARN QUIZ ============
+
+@app.post("/learn-concept/quiz")
+def learn_quiz(
+    user_id: str = Form(...),
+    concept: str = Form(...),
+    level: str = Form("lycée"),
+    num_questions: int = Form(3),
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        user = create_user(db, f"guest_{user_id}")
+        user_id = user.id
+
+    if not can_perform(db, user_id, "learn_question"):
+        raise HTTPException(400, f"Il faut {ACTION_COSTS['learn_question']} crédit")
+
+    # Générer le quiz
+    prompt = LEARN_CONCEPT_QUIZ_PROMPT.format(
+        concept=concept,
+        level=level,
+        num_questions=num_questions
+    )
+
+    response = get_ai_response(prompt)
+    perform(db, user_id, "learn_question")
+    update_streak(db, user_id)
+    save_history(db, user_id, "learn_quiz", concept, response, ACTION_COSTS["learn_question"])
+
+    return {
+        "quiz": response,
+        "credits": get_credits(db, user_id),
+        "concept": concept,
+        "level": level,
+        "num_questions": num_questions
+    }
+
+
+@app.post("/learn-concept/quiz/correct")
+def correct_quiz_answer(
+    user_id: str = Form(...),
+    question: str = Form(...),
+    user_answer: str = Form(...),
+    correct_answer: str = Form(...),
+    concept: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        user = create_user(db, f"guest_{user_id}")
+        user_id = user.id
+
+    if not can_perform(db, user_id, "learn_question"):
+        raise HTTPException(400, f"Il faut {ACTION_COSTS['learn_question']} crédit")
+
+    prompt = LEARN_CONCEPT_CORRECTION_PROMPT.format(
+        exercise=question,
+        user_answer=user_answer,
+        concept=concept
+    )
+
+    response = get_ai_response(prompt)
+    perform(db, user_id, "learn_question")
+    update_streak(db, user_id)
+    
+    is_correct = user_answer.strip().lower() == correct_answer.strip().lower()
+    
+    save_history(db, user_id, "quiz_correction", question, response, ACTION_COSTS["learn_question"])
+
+    return {
+        "is_correct": is_correct,
+        "correction": response,
+        "credits": get_credits(db, user_id),
+        "concept": concept
+    }
+
+
+@app.post("/learn-concept/personalized-exercise")
+def personalized_exercise(
+    user_id: str = Form(...),
+    concept: str = Form(...),
+    level: str = Form("lycée"),
+    difficulty: str = Form("moyen"),
+    previous_exercises: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        user = create_user(db, f"guest_{user_id}")
+        user_id = user.id
+
+    if not can_perform(db, user_id, "generate_exercise"):
+        raise HTTPException(400, f"Il faut {ACTION_COSTS['generate_exercise']} crédit")
+
+    prompt = LEARN_CONCEPT_PERSONALIZED_EXERCISE_PROMPT.format(
+        concept=concept,
+        level=level,
+        difficulty=difficulty,
+        previous_exercises=previous_exercises or "Aucun"
+    )
+
+    response = get_ai_response(prompt)
+    perform(db, user_id, "generate_exercise")
+    update_streak(db, user_id)
+    save_history(db, user_id, "personalized_exercise", concept, response, ACTION_COSTS["generate_exercise"])
+
+    return {
+        "exercise": response.strip('"'),
+        "credits": get_credits(db, user_id),
+        "concept": concept,
+        "level": level,
+        "difficulty": difficulty
+    }
+
+
+@app.post("/learn-concept/correct-exercise")
+def correct_exercise(
+    user_id: str = Form(...),
+    exercise: str = Form(...),
+    user_answer: str = Form(...),
+    concept: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        user = create_user(db, f"guest_{user_id}")
+        user_id = user.id
+
+    if not can_perform(db, user_id, "correct_exercise"):
+        raise HTTPException(400, f"Il faut {ACTION_COSTS['correct_exercise']} crédit")
+
+    prompt = LEARN_CONCEPT_CORRECTION_PROMPT.format(
+        exercise=exercise,
+        user_answer=user_answer,
+        concept=concept
+    )
+
+    response = get_ai_response(prompt)
+    perform(db, user_id, "correct_exercise")
+    update_streak(db, user_id)
+    save_history(db, user_id, "exercise_correction", exercise, response, ACTION_COSTS["correct_exercise"])
+
+    return {
+        "correction": response,
+        "credits": get_credits(db, user_id),
+        "concept": concept
+    }
+
+
+# ============ SIMILAR EXERCISE ============
+
+@app.post("/help-me/similar-exercise")
+def similar_exercise(
+    user_id: str = Form(...),
+    exercise: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        user = create_user(db, f"guest_{user_id}")
+        user_id = user.id
+
+    if not can_perform(db, user_id, "generate_exercise"):
+        raise HTTPException(400, f"Il faut {ACTION_COSTS['generate_exercise']} crédit")
+
+    # Utiliser le prompt pour générer un exercice similaire
+    prompt = HELP_ME_SIMILAR_EXERCISE_PROMPT.format(exercise=exercise)
+
+    response = get_ai_response(prompt)
+    perform(db, user_id, "generate_exercise")
+    update_streak(db, user_id)
+    save_history(db, user_id, "similar_exercise", exercise, response, ACTION_COSTS["generate_exercise"])
+
+    return {
+        "exercise": response.strip('"'),
+        "credits": get_credits(db, user_id),
+        "original_exercise": exercise
+    }
 
 
 # ============ STREAMING ============

@@ -1447,3 +1447,145 @@ textarea {
         padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
     }
 }
+
+/* ===== Similar Exercise Panel ===== */
+.similar-exercise-panel {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.similar-exercise-panel .btn {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* ===== Hint Buttons Used State ===== */
+.hint-buttons .btn.used {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ===== Learn Section - Level Selector ===== */
+.learn-level-selector {
+    margin-bottom: 1.5rem;
+}
+
+.learn-level-selector label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark);
+}
+
+.learn-level-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.learn-level-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--light);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.learn-level-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.learn-level-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* ===== Quiz Section ===== */
+.quiz-container {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.quiz-question {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quiz-option {
+    padding: 1rem;
+    background: var(--light);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-size: 0.875rem;
+}
+
+.quiz-option:hover {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.quiz-option.selected {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.quiz-option.correct {
+    background: var(--success-bg);
+    border-color: var(--success);
+}
+
+.quiz-option.incorrect {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+}
+
+.quiz-feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+}
+
+.quiz-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* ===== Personalized Exercise ===== */
+.personalized-exercise-panel {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+    border: 1px dashed var(--border);
+}
+
+.personalized-exercise-panel h4 {
+    margin-bottom: 0.75rem;
+    color: var(--primary);
+}
+
+.personalized-exercise-panel p {
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: var(--gray);
+}

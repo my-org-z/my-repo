@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, DateTime, Enum
+from sqlalchemy import Column, String, Float, DateTime, Enum as SQLEnum
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from enum import Enum
@@ -6,7 +6,7 @@ from enum import Enum
 Base = declarative_base()
 
 
-class PaymentStatus(Enum):
+class PaymentStatus(str, Enum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
@@ -23,7 +23,7 @@ class Payment(Base):
     method = Column(String)  # tmoney, momo, etc.
     plan = Column(String, nullable=True)  # subscription plan
     credit_pack = Column(String, nullable=True)  # credit pack
-    status = Column(Enum(PaymentStatus), default=PaymentStatus.pending)
+    status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.pending)
     reference = Column(String, unique=True)
     phone_number = Column(String, nullable=True)
     operator = Column(String, nullable=True)
