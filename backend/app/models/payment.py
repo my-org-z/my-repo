@@ -27,6 +27,6 @@ class Payment(Base):
     reference = Column(String, unique=True)
     phone_number = Column(String, nullable=True)
     operator = Column(String, nullable=True)
-    metadata = Column(String, nullable=True)
+    metadata_json = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
