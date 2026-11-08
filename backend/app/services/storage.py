@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
-from app.models import UserBase, ExerciseBase, PaymentBase
+from app.models import Base
 
 engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -16,6 +16,4 @@ def get_db():
 
 
 def init_db():
-    UserBase.metadata.create_all(bind=engine)
-    ExerciseBase.metadata.create_all(bind=engine)
-    PaymentBase.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)

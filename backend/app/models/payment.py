@@ -1,9 +1,7 @@
 from sqlalchemy import Column, String, Float, DateTime, Enum as SQLEnum
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from enum import Enum
-
-Base = declarative_base()
+from .base import Base
 
 
 class PaymentStatus(str, Enum):

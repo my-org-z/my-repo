@@ -1,8 +1,6 @@
 from sqlalchemy import Column, String, Text, Float, Integer, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-
-Base = declarative_base()
+from .base import Base
 
 
 class Exercise(Base):

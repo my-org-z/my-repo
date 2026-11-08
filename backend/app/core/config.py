@@ -3,14 +3,15 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Mistral API
-    MISTRAL_API_KEY: str = "your_mistral_api_key"
+    MISTRAL_API_KEY: str = "mstrl_bjo7l3AvLSVsT2w42EvRs394UMcb4JsB_2hdwmd"
     MISTRAL_MODEL: str = "pixtral-12b"
 
-    # Database
-    DATABASE_URL: str = "postgresql://hintai_db_user:BZaodgVH83BkW2YYyUn5rKNGu4osV4Yx@dpg-daguisuk1f9s73e0p0ag-a.oregon-postgres.render.com/hintai_db"
+    # Database - Default to SQLite for local dev, override with TiDB/MySQL on Render
+    # TiDB format: mysql+pymysql://username:password@host:4000/database?ssl_verify_cert=true
+    DATABASE_URL: str = "sqlite:///./db/hints.db"
 
     # Security
-    SECRET_KEY: str = "change_this_in_production"
+    SECRET_KEY: str = "hintai_secret_2024_tidb"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
