@@ -45,6 +45,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve frontend static files
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="../../frontend/src", html=False), name="static")
+
 
 # --- Helper Functions ---
 
@@ -780,3 +784,18 @@ def history(user_id: str = Query(...), limit: int = 50, db: Session = Depends(ge
         {"id": i.id, "action": i.action, "prompt": i.prompt, "response": i.response, "credits": i.credits_used, "timestamp": i.timestamp}
         for i in items
     ]
+
+
+# ============ FRONTEND SERVER ============
+
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend_root():
+    """Serve the frontend index.html for root path"""
+    try:
+        with open("../../frontend/src/index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Frontend not found</h1>", status_code=404)

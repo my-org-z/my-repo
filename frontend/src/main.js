@@ -1,6 +1,7 @@
 // ===== Configuration =====
-const BACKEND_URL = 'https://hintai-backend.onrender.com';
+const BACKEND_URL = '';
 // const BACKEND_URL = 'http://localhost:8000';
+// For production: same domain (my-repo-7655.onrender.com)
 
 // ===== State =====
 let currentUser = null;
