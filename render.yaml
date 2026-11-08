@@ -16,6 +16,6 @@ services:
       - key: SECRET_KEY
         value: hintai_secret_2024_tidb
       - key: DATABASE_URL
-        value: postgresql://hintai_db_user:BZaodgVH83BkW2YYyUn5rKNGu4osV4Yx@dpg-daguisuk1f9s73e0p0ag-a.oregon-postgres.render.com/hintai_db
+        value: mysql+pymysql://43JVFKK0:02159184-ac33-4339-a5fd-0082c0a63680@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/hintai_db?ssl_verify_cert=true
       - key: ENVIRONMENT
         value: production
